@@ -1,0 +1,29 @@
+{
+  "name": "calendarman",
+  "type": "module",
+  "version": "0.0.1",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "astro": "astro"
+  },
+  "dependencies": {
+    "@astrojs/check": "^0.9.6",
+    "@astrojs/node": "^9.5.2",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/uuid": "^10.0.0",
+    "astro": "^5.17.1",
+    "astro-bootstrap": "^0.7.2",
+    "bcryptjs": "^3.0.3",
+    "bootstrap": "^5.3.8",
+    "typescript": "^5.9.3",
+    "uuid": "^13.0.0"
+  },
+  "devDependencies": {
+    "@popperjs/core": "^2.11.8",
+    "@types/bootstrap": "^5.2.10",
+    "@types/node": "^25.2.3",
+    "sass": "^1.97.3"
+  }
+}

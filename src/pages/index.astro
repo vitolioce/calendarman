@@ -1,0 +1,435 @@
+---
+import Layout from "../layouts/Layout.astro";
+import Calendar from "../components/Calendar.astro";
+import { getEvents, getParticipants } from "../lib/db";
+
+const user = Astro.locals.user;
+
+const url = new URL(Astro.request.url);
+const currentYear = url.searchParams.get("year")
+	? parseInt(url.searchParams.get("year")!)
+	: new Date().getFullYear();
+const currentMonth = url.searchParams.get("month")
+	? parseInt(url.searchParams.get("month")!)
+	: new Date().getMonth();
+
+const events = await getEvents();
+const participants = await getParticipants();
+
+// Enrich events with participant counts for view
+const eventsWithCount = events.map((e) => ({
+	...e,
+	participantsCount: participants.filter((p) => p.eventId === e.id).length,
+}));
+---
+
+<Layout title="Calendario Condiviso">
+	<div
+		class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4 gap-3"
+	>
+		<div>
+			<h1 class="display-6 mb-0">Calendario Eventi</h1>
+		</div>
+		<div>
+			{
+				user ? (
+					<button
+						class="btn btn-primary"
+						data-bs-toggle="modal"
+						data-bs-target="#createEventModal"
+					>
+						<i class="bi bi-plus-lg" /> Crea Evento
+					</button>
+				) : (
+					<div class="alert alert-warning py-2 px-3 d-inline-block mb-0 small">
+						Accedi per creare eventi
+					</div>
+				)
+			}
+		</div>
+	</div>
+
+	<Calendar
+		year={currentYear}
+		month={currentMonth}
+		events={eventsWithCount}
+	/>
+
+	<!-- Create Event Modal -->
+	<div
+		class="modal fade"
+		id="createEventModal"
+		tabindex="-1"
+		aria-labelledby="createEventModalLabel"
+		aria-hidden="true"
+	>
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title" id="createEventModalLabel">
+						Nuovo Evento
+					</h5>
+					<button
+						type="button"
+						class="btn-close"
+						data-bs-dismiss="modal"
+						aria-label="Close"></button>
+				</div>
+				<div class="modal-body">
+					<form id="create-event-form">
+						<div class="mb-3">
+							<label for="eventTitle" class="form-label"
+								>Titolo</label
+							>
+							<input
+								type="text"
+								class="form-control"
+								id="eventTitle"
+								required
+							/>
+						</div>
+						<div class="mb-3">
+							<label for="eventDesc" class="form-label"
+								>Descrizione</label
+							>
+							<textarea
+								class="form-control"
+								id="eventDesc"
+								rows="3"></textarea>
+						</div>
+						<div class="row">
+							<div class="col-md-6 mb-3">
+								<label for="eventDate" class="form-label"
+									>Data</label
+								>
+								<input
+									type="date"
+									class="form-control"
+									id="eventDate"
+									required
+								/>
+							</div>
+							<div class="col-md-6 mb-3">
+								<label for="eventTime" class="form-label"
+									>Ora</label
+								>
+								<input
+									type="time"
+									class="form-control"
+									id="eventTime"
+									required
+								/>
+							</div>
+						</div>
+						<div class="d-grid gap-2">
+							<button type="submit" class="btn btn-primary"
+								>Salva Evento</button
+							>
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- Event Detail Modal -->
+	<div
+		class="modal fade"
+		id="eventDetailModal"
+		tabindex="-1"
+		aria-labelledby="eventDetailLabel"
+		aria-hidden="true"
+	>
+		<div class="modal-dialog modal-lg">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title" id="detailTitle">
+						Dettagli Evento
+					</h5>
+					<button
+						type="button"
+						class="btn-close"
+						data-bs-dismiss="modal"
+						aria-label="Close"></button>
+				</div>
+				<div class="modal-body">
+					<div class="row">
+						<div class="col-md-8">
+							<p id="detailDesc" class="lead"></p>
+							<ul class="list-unstyled">
+								<li>
+									<strong>Data:</strong>
+									<span id="detailDate"></span>
+								</li>
+								<li>
+									<strong>Ora:</strong>
+									<span id="detailTime"></span>
+								</li>
+							</ul>
+						</div>
+						<div class="col-md-4 border-start">
+							<h6>
+								Partecipanti (<span id="participantCount"
+									>0</span
+								>)
+							</h6>
+							<ul
+								id="participantList"
+								class="list-group list-group-flush small"
+							>
+								<!-- List of participants -->
+							</ul>
+							<div class="mt-3">
+								{
+									user ? (
+										<button
+											id="joinBtn"
+											class="btn btn-success w-100"
+										>
+											Partecipa
+										</button>
+									) : (
+										<p class="text-muted small text-center mt-2">
+											Login per partecipare
+										</p>
+									)
+								}
+								{
+									user && (
+										<button
+											id="leaveBtn"
+											class="btn btn-outline-warning w-100 mt-2 d-none"
+										>
+											Annulla Partecipazione
+										</button>
+									)
+								}
+								{
+									user && (
+										<button
+											id="deleteBtn"
+											class="btn btn-danger w-100 mt-2 d-none"
+										>
+											Elimina Evento
+										</button>
+									)
+								}
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<script>
+		import { Modal } from "bootstrap";
+
+		// Handle Create Event
+		const createForm = document.getElementById("create-event-form");
+		if (createForm) {
+			createForm.addEventListener("submit", async (e) => {
+				e.preventDefault();
+				const title = (
+					document.getElementById("eventTitle") as HTMLInputElement
+				).value;
+				const description = (
+					document.getElementById("eventDesc") as HTMLTextAreaElement
+				).value;
+				const date = (
+					document.getElementById("eventDate") as HTMLInputElement
+				).value;
+				const time = (
+					document.getElementById("eventTime") as HTMLInputElement
+				).value;
+
+				try {
+					const res = await fetch("/api/events", {
+						method: "POST",
+						headers: { "Content-Type": "application/json" },
+						body: JSON.stringify({
+							title,
+							description,
+							date,
+							time,
+						}),
+					});
+
+					if (res.ok) {
+						window.location.reload();
+					} else {
+						const data = await res.json();
+						alert(data.error || "Errore creazione evento");
+					}
+				} catch (error) {
+					console.error(error);
+					alert("Errore di rete");
+				}
+			});
+		}
+
+		// Handle Event Details Modal Check
+		// We attach click listeners to calendar events via event delegation or direct if easy.
+		// Since Calendar renders server-side, we can just grab all `.event-badge`.
+
+		const eventBadges = document.querySelectorAll(".event-badge");
+		const detailModalEl = document.getElementById("eventDetailModal");
+		const detailModal = new Modal(detailModalEl as HTMLElement);
+		let currentEventId: string | null = null;
+
+		eventBadges.forEach((badge) => {
+			badge.addEventListener("click", async (e) => {
+				e.preventDefault();
+				const id = badge.getAttribute("data-id");
+				if (!id) return;
+
+				// Fetch details
+				try {
+					const res = await fetch(`/api/events/${id}`);
+					if (!res.ok) return;
+					const data = await res.json();
+
+					// Populate modal
+					document.getElementById("detailTitle")!.textContent =
+						data.title;
+					document.getElementById("detailDesc")!.textContent =
+						data.description || "Nessuna descrizione.";
+					document.getElementById("detailDate")!.textContent =
+						new Date(data.date).toLocaleDateString("it-IT");
+					document.getElementById("detailTime")!.textContent =
+						data.time;
+
+					// Participants
+					const pList = document.getElementById("participantList")!;
+					pList.innerHTML = "";
+					document.getElementById("participantCount")!.textContent =
+						data.participants.length.toString();
+
+					data.participants.forEach((u: any) => {
+						const li = document.createElement("li");
+						li.className =
+							"list-group-item px-0 py-1 bg-transparent";
+						li.textContent = `${u.nome} ${u.cognome}`;
+						pList.appendChild(li);
+					});
+
+					// Logic for buttons
+					currentEventId = id;
+					const joinBtn = document.getElementById("joinBtn");
+					const deleteBtn = document.getElementById("deleteBtn");
+
+					// Check if user already joined
+					// We need current user ID available in client.
+					// We can fetch /api/auth/me again or store it in a meta tag or hidden field.
+					// For simplicity, let's fetch /api/auth/me to check current user status.
+					const meRes = await fetch("/api/auth/me");
+					if (meRes.ok) {
+						const me = await meRes.json();
+						const isCreator = me.id === data.creatorId;
+						const isParticipant = data.participants.some(
+							(p: any) => p.id === me.id,
+						);
+
+						if (deleteBtn) {
+							if (isCreator) {
+								deleteBtn.classList.remove("d-none");
+							} else {
+								deleteBtn.classList.add("d-none");
+							}
+						}
+
+						const leaveBtn = document.getElementById("leaveBtn");
+						if (joinBtn) {
+							if (isParticipant) {
+								joinBtn.classList.add("d-none");
+								if (leaveBtn)
+									leaveBtn.classList.remove("d-none");
+							} else {
+								joinBtn.classList.remove("d-none");
+								if (leaveBtn) leaveBtn.classList.add("d-none");
+							}
+						}
+					} else {
+						if (joinBtn) joinBtn.style.display = "none"; // Should be hidden by server render but let's be safe
+						if (deleteBtn) deleteBtn.classList.add("d-none");
+					}
+
+					detailModal.show();
+				} catch (error) {
+					console.error(error);
+				}
+			});
+		});
+
+		// Handle Join
+		const joinBtn = document.getElementById("joinBtn");
+		if (joinBtn) {
+			joinBtn.addEventListener("click", async () => {
+				if (!currentEventId) return;
+				try {
+					const res = await fetch("/api/join", {
+						method: "POST",
+						headers: { "Content-Type": "application/json" },
+						body: JSON.stringify({ eventId: currentEventId }),
+					});
+					if (res.ok) {
+						alert("Partecipazione confermata!");
+						window.location.reload();
+					} else {
+						const d = await res.json();
+						alert(d.error || "Errore");
+					}
+				} catch (e) {
+					console.error(e);
+				}
+			});
+		}
+		// Handle Leave
+		const leaveBtn = document.getElementById("leaveBtn");
+		if (leaveBtn) {
+			leaveBtn.addEventListener("click", async () => {
+				if (!currentEventId) return;
+				try {
+					const res = await fetch("/api/join", {
+						method: "DELETE",
+						headers: { "Content-Type": "application/json" },
+						body: JSON.stringify({ eventId: currentEventId }),
+					});
+					if (res.ok) {
+						alert("Partecipazione annullata");
+						window.location.reload();
+					} else {
+						alert("Errore");
+					}
+				} catch (e) {
+					console.error(e);
+				}
+			});
+		}
+
+		// Handle Delete
+		const deleteBtn = document.getElementById("deleteBtn");
+		if (deleteBtn) {
+			deleteBtn.addEventListener("click", async () => {
+				if (
+					!currentEventId ||
+					!confirm("Sei sicuro di voler eliminare questo evento?")
+				)
+					return;
+				try {
+					const res = await fetch(`/api/events/${currentEventId}`, {
+						method: "DELETE",
+					});
+					if (res.ok) {
+						alert("Evento eliminato");
+						window.location.reload();
+					} else {
+						alert("Errore eliminazione");
+					}
+				} catch (e) {
+					console.error(e);
+				}
+			});
+		}
+	</script>
+</Layout>

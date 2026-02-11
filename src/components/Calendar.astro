@@ -1,0 +1,428 @@
+---
+import type { Event } from "../types";
+
+interface Props {
+    year: number;
+    month: number; // 0-11
+    events: (Event & { participantsCount: number })[];
+}
+
+const { year, month, events } = Astro.props;
+
+// Helper to get days in month
+const daysInMonth = (y: number, m: number) => new Date(y, m + 1, 0).getDate();
+const firstDayOfMonth = (y: number, m: number) => {
+    let day = new Date(y, m, 1).getDay();
+    // Adjust for Monday start (0=Sunday, 1=Monday... but we want Monday=0)
+    return day === 0 ? 6 : day - 1;
+};
+
+const totalDays = daysInMonth(year, month);
+const startOffset = firstDayOfMonth(year, month);
+
+// Generate calendar grid
+const grid = [];
+let dayCounter = 1;
+
+// 6 rows (max needed for 31 days starting on Sunday)
+for (let i = 0; i < 6; i++) {
+    const row = [];
+    for (let j = 0; j < 7; j++) {
+        if (i === 0 && j < startOffset) {
+            row.push(null);
+        } else if (dayCounter > totalDays) {
+            row.push(null);
+        } else {
+            row.push(dayCounter);
+            dayCounter++;
+        }
+    }
+    if (row.every((d) => d === null) && i > 0) break; // Stop empty rows
+    grid.push(row);
+}
+
+const monthName = new Date(year, month).toLocaleString("it-IT", {
+    month: "long",
+});
+const capitalizedMonth = monthName.charAt(0).toUpperCase() + monthName.slice(1);
+
+const today = new Date();
+const isCurrentMonth =
+    today.getFullYear() === year && today.getMonth() === month;
+
+function getEventsForDay(day: number) {
+    return events.filter((e) => {
+        const d = new Date(e.date);
+        return (
+            d.getDate() === day &&
+            d.getMonth() === month &&
+            d.getFullYear() === year
+        );
+    });
+}
+---
+
+<div class="calendar-container">
+    <div
+        class="d-flex flex-column flex-sm-row justify-content-between align-items-center mb-4 gap-3"
+    >
+        <h2 class="text-capitalize h3 mb-0 fw-bold">
+            {capitalizedMonth}
+            <span class="text-primary">{year}</span>
+        </h2>
+        <div class="btn-group shadow-sm">
+            <a
+                href={`/?month=${month === 0 ? 11 : month - 1}&year=${month === 0 ? year - 1 : year}`}
+                class="btn btn-outline-primary btn-sm px-3">&lt;</a
+            >
+            <a
+                href={`/?month=${month === 11 ? 0 : month + 1}&year=${month === 11 ? year + 1 : year}`}
+                class="btn btn-outline-primary btn-sm px-3">&gt;</a
+            >
+        </div>
+    </div>
+
+    <!-- Desktop View: Table (Hidden on small screens) -->
+    <div class="calendar-desktop d-none d-lg-block">
+        <div class="table-responsive calendar-wrapper">
+            <table class="table table-bordered calendar-table mb-0">
+                <thead>
+                    <tr>
+                        <th>Lun</th><th>Mar</th><th>Mer</th><th>Gio</th><th
+                            >Ven</th
+                        ><th>Sab</th><th>Dom</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {
+                        grid.map((row) => (
+                            <tr>
+                                {row.map((day) => {
+                                    const dayEvents = day
+                                        ? getEventsForDay(day)
+                                        : [];
+                                    const isToday =
+                                        isCurrentMonth &&
+                                        day === today.getDate();
+                                    const isPast = day
+                                        ? new Date(year, month, day) <
+                                          new Date(today.setHours(0, 0, 0, 0))
+                                        : false;
+
+                                    return (
+                                        <td
+                                            class={`calendar-cell ${day ? "" : "is-empty"} ${isToday ? "is-today" : ""}`}
+                                        >
+                                            {day && (
+                                                <div class="cell-content">
+                                                    <div class="cell-header">
+                                                        <span
+                                                            class={`day-number ${isToday ? "is-today-badge" : ""}`}
+                                                        >
+                                                            {day}
+                                                        </span>
+                                                    </div>
+                                                    <div class="events-list">
+                                                        {dayEvents.map(
+                                                            (event) => (
+                                                                <a
+                                                                    href="#"
+                                                                    data-id={
+                                                                        event.id
+                                                                    }
+                                                                    class={`event-link ${isPast ? "is-past" : ""} event-badge`}
+                                                                    title={
+                                                                        event.title
+                                                                    }
+                                                                >
+                                                                    <span class="event-time">
+                                                                        {
+                                                                            event.time
+                                                                        }
+                                                                    </span>
+                                                                    <span class="event-title text-truncate">
+                                                                        {
+                                                                            event.title
+                                                                        }
+                                                                    </span>
+                                                                </a>
+                                                            ),
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </td>
+                                    );
+                                })}
+                            </tr>
+                        ))
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Mobile View: Agenda List (Visible only on small screens) -->
+    <div class="calendar-mobile d-block d-lg-none">
+        <div class="agenda-list">
+            {
+                Array.from({ length: totalDays }, (_, i) => i + 1).map(
+                    (day) => {
+                        const dayEvents = getEventsForDay(day);
+                        const isToday =
+                            isCurrentMonth && day === today.getDate();
+                        const dayName = new Date(
+                            year,
+                            month,
+                            day,
+                        ).toLocaleDateString("it-IT", { weekday: "short" });
+                        const isPast =
+                            new Date(year, month, day) <
+                            new Date(today.setHours(0, 0, 0, 0));
+
+                        return dayEvents.length > 0 || isToday ? (
+                            <div
+                                class={`agenda-item ${isToday ? "is-today" : ""} ${isPast ? "is-past" : ""}`}
+                            >
+                                <div class="agenda-date">
+                                    <span class="agenda-day-name text-uppercase">
+                                        {dayName}
+                                    </span>
+                                    <span
+                                        class={`agenda-day-num ${isToday ? "bg-primary text-white" : ""}`}
+                                    >
+                                        {day}
+                                    </span>
+                                </div>
+                                <div class="agenda-content">
+                                    {dayEvents.length > 0 ? (
+                                        <div class="agenda-events">
+                                            {dayEvents.map((event) => (
+                                                <button
+                                                    data-id={event.id}
+                                                    class="agenda-event-card event-badge"
+                                                >
+                                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                                        <span class="event-time small fw-bold text-primary">
+                                                            {event.time}
+                                                        </span>
+                                                    </div>
+                                                    <span class="event-title fw-semibold">
+                                                        {event.title}
+                                                    </span>
+                                                </button>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <span class="no-events-text">
+                                            Nessun evento oggi
+                                        </span>
+                                    )}
+                                </div>
+                            </div>
+                        ) : null;
+                    },
+                )
+            }
+            {
+                // Message if no events in the whole month
+                events.length === 0 && (
+                    <div class="alert alert-info border-0 rounded-4 glass-bg">
+                        Non ci sono eventi in questo mese.
+                    </div>
+                )
+            }
+        </div>
+    </div>
+</div>
+
+<style>
+    /* DESKTOP STYLES (992px+) */
+    @media (min-width: 992px) {
+        .calendar-wrapper {
+            border-radius: 20px;
+            border: 1px solid var(--glass-border);
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+        }
+        .calendar-table {
+            margin-bottom: 0;
+            table-layout: fixed;
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .calendar-table th {
+            width: 14.285%;
+            background: rgba(0, 0, 0, 0.2);
+            color: #6366f1;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 1px;
+            font-weight: 700;
+            text-align: center;
+            padding: 15px 5px;
+            border: none;
+            border-bottom: 1px solid var(--glass-border);
+        }
+        .calendar-cell {
+            height: 125px;
+            width: 14.285%;
+            padding: 8px !important;
+            border: 0.5px solid var(--glass-border) !important;
+            transition: all 0.2s ease;
+            vertical-align: top;
+        }
+        .calendar-cell.is-today {
+            background: rgba(99, 102, 241, 0.05);
+            box-shadow: inset 0 0 0 1px rgba(99, 102, 241, 0.3);
+        }
+    }
+
+    /* MOBILE STYLES (<992px) */
+    .agenda-list {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+    .agenda-item {
+        display: flex;
+        background: var(--glass-bg);
+        border: 1px solid var(--glass-border);
+        border-radius: 16px;
+        overflow: hidden;
+        backdrop-filter: blur(8px);
+        transition: transform 0.2s;
+    }
+    .agenda-item.is-today {
+        border-color: #6366f1;
+        box-shadow: 0 0 15px rgba(99, 102, 241, 0.2);
+    }
+    .agenda-item.is-past {
+        opacity: 0.7;
+    }
+    .agenda-date {
+        width: 70px;
+        background: rgba(0, 0, 0, 0.05);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 10px;
+        border-right: 1px solid var(--glass-border);
+        flex-shrink: 0;
+    }
+    .agenda-day-name {
+        font-size: 0.65rem;
+        font-weight: 700;
+        opacity: 0.6;
+    }
+    .agenda-day-num {
+        font-size: 1.2rem;
+        font-weight: 700;
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px;
+    }
+    .agenda-content {
+        flex-grow: 1;
+        padding: 12px;
+        display: flex;
+        align-items: center;
+    }
+    .agenda-events {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        width: 100%;
+    }
+    .agenda-event-card {
+        background: rgba(99, 102, 241, 0.1);
+        border: none;
+        border-left: 4px solid #6366f1;
+        border-radius: 8px;
+        padding: 8px 12px;
+        text-align: left;
+        color: inherit;
+        display: flex;
+        flex-direction: column;
+        transition: background 0.2s;
+    }
+    .agenda-event-card:active {
+        background: rgba(99, 102, 241, 0.2);
+    }
+    .no-events-text {
+        font-size: 0.8rem;
+        opacity: 0.4;
+        font-style: italic;
+    }
+
+    /* Shared utility styles */
+    .cell-content {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+    .cell-header {
+        margin-bottom: 6px;
+    }
+    .day-number {
+        font-weight: 600;
+        font-size: 0.95rem;
+        opacity: 0.8;
+    }
+    .is-today-badge {
+        background: #6366f1;
+        color: white;
+        width: 26px;
+        height: 26px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px;
+        box-shadow: 0 4px 10px rgba(99, 102, 241, 0.4);
+        opacity: 1;
+        font-size: 0.85rem;
+    }
+    .events-list {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        overflow-y: auto;
+    }
+    .event-link {
+        display: flex;
+        align-items: center;
+        padding: 4px 8px;
+        background: rgba(99, 102, 241, 0.15);
+        border-left: 3px solid #6366f1;
+        border-radius: 4px;
+        text-decoration: none;
+        color: inherit;
+        font-size: 0.72rem;
+        transition: all 0.2s ease;
+        overflow: hidden;
+    }
+    .event-time {
+        font-weight: 700;
+        margin-right: 6px;
+        color: #a855f7;
+        flex-shrink: 0;
+    }
+    .event-title {
+        flex-grow: 1;
+        min-width: 0;
+    }
+
+    [data-bs-theme="light"] .calendar-wrapper {
+        background: rgba(255, 255, 255, 0.7);
+    }
+    [data-bs-theme="light"] .agenda-date {
+        background: rgba(0, 0, 0, 0.02);
+    }
+</style>

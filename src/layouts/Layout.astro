@@ -1,0 +1,273 @@
+---
+import "bootstrap/dist/css/bootstrap.min.css";
+
+interface Props {
+	title: string;
+}
+
+const { title } = Astro.props;
+const user = Astro.locals.user;
+---
+
+<!doctype html>
+<html lang="it" data-bs-theme="dark">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="description" content="Astro description" />
+		<meta name="viewport" content="width=device-width" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<meta name="generator" content={Astro.generator} />
+		<title>{title}</title>
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+		<link
+			href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap"
+			rel="stylesheet"
+		/>
+		<script is:inline>
+			// Dark mode toggle logic
+			const getStoredTheme = () => localStorage.getItem("theme");
+			const setStoredTheme = (theme) =>
+				localStorage.setItem("theme", theme);
+
+			const getPreferredTheme = () => {
+				const storedTheme = getStoredTheme();
+				if (storedTheme) {
+					return storedTheme;
+				}
+				return window.matchMedia("(prefers-color-scheme: dark)").matches
+					? "dark"
+					: "light";
+			};
+
+			const setTheme = (theme) => {
+				if (
+					theme === "auto" &&
+					window.matchMedia("(prefers-color-scheme: dark)").matches
+				) {
+					document.documentElement.setAttribute(
+						"data-bs-theme",
+						"dark",
+					);
+				} else {
+					document.documentElement.setAttribute(
+						"data-bs-theme",
+						theme,
+					);
+				}
+			};
+
+			setTheme(getPreferredTheme());
+
+			window
+				.matchMedia("(prefers-color-scheme: dark)")
+				.addEventListener("change", () => {
+					const storedTheme = getStoredTheme();
+					if (storedTheme !== "light" && storedTheme !== "dark") {
+						setTheme(getPreferredTheme());
+					}
+				});
+		</script>
+	</head>
+	<body>
+		<nav class="navbar navbar-expand-lg mb-4 sticky-top">
+			<div class="container">
+				<a class="navbar-brand" href="/">Compagnia dell'Obelisco - Prossimi eventi</a>
+				<button
+					class="navbar-toggler"
+					type="button"
+					data-bs-toggle="collapse"
+					data-bs-target="#navbarNav"
+					aria-controls="navbarNav"
+					aria-expanded="false"
+					aria-label="Toggle navigation"
+				>
+					<span class="navbar-toggler-icon"></span>
+				</button>
+				<div class="collapse navbar-collapse" id="navbarNav">
+					<ul class="navbar-nav me-auto">
+						<li class="nav-item">
+							<a class="nav-link" href="/">Calendario</a>
+						</li>
+						<li class="nav-item">
+							<a class="nav-link" href="/upcoming"
+								>Prossimi Eventi</a
+							>
+						</li>
+					</ul>
+					<div class="d-flex align-items-center">
+						<button
+							id="theme-toggle"
+							class="btn btn-sm me-3 theme-toggle-btn"
+						>
+							<span class="theme-icon"></span>
+						</button>
+						{
+							!user ? (
+								<div id="auth-buttons">
+									<a
+										href="/login"
+										class="btn btn-primary btn-sm me-2"
+									>
+										Login
+									</a>
+									<a
+										href="/register"
+										class="btn btn-secondary btn-sm"
+									>
+										Register
+									</a>
+								</div>
+							) : (
+								<div id="user-info">
+									<span
+										class="navbar-text me-3"
+										id="user-name"
+									>
+										Ciao, {user.nome}
+									</span>
+									<button
+										id="logout-btn"
+										class="btn btn-danger btn-sm"
+									>
+										Logout
+									</button>
+								</div>
+							)
+						}
+					</div>
+				</div>
+			</div>
+		</nav>
+
+		<div class="container">
+			<slot />
+		</div>
+
+		<script>
+			import "bootstrap/dist/js/bootstrap.bundle.min.js";
+
+			// Toggle theme button handler
+			const themeToggleBtn = document.getElementById("theme-toggle");
+			if (themeToggleBtn) {
+				themeToggleBtn.addEventListener("click", () => {
+					const currentTheme =
+						document.documentElement.getAttribute("data-bs-theme");
+					const newTheme = currentTheme === "dark" ? "light" : "dark";
+					document.documentElement.setAttribute(
+						"data-bs-theme",
+						newTheme,
+					);
+					localStorage.setItem("theme", newTheme);
+				});
+			}
+
+			const logoutBtn = document.getElementById("logout-btn");
+			if (logoutBtn) {
+				logoutBtn.addEventListener("click", async () => {
+					await fetch("/api/auth/logout", { method: "POST" });
+					window.location.href = "/";
+				});
+			}
+		</script>
+
+		<style is:global>
+			:root {
+				--glass-bg: rgba(255, 255, 255, 0.05);
+				--glass-border: rgba(255, 255, 255, 0.1);
+			}
+			body {
+				font-family: "Outfit", sans-serif;
+				background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+				min-height: 100vh;
+				color: #f8fafc;
+			}
+			[data-bs-theme="light"] body {
+				background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+				color: #0f172a;
+			}
+			.navbar {
+				backdrop-filter: blur(12px);
+				border-bottom: 1px solid var(--glass-border);
+				background-color: rgba(15, 23, 42, 0.7) !important;
+				transition: all 0.3s ease;
+			}
+			.navbar .navbar-brand,
+			.navbar .nav-link,
+			.navbar .navbar-text {
+				color: #f8fafc !important;
+			}
+			[data-bs-theme="light"] .navbar {
+				background-color: rgba(255, 255, 255, 0.7) !important;
+				border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+			}
+			[data-bs-theme="light"] .navbar .navbar-brand,
+			[data-bs-theme="light"] .navbar .nav-link,
+			[data-bs-theme="light"] .navbar .navbar-text {
+				color: #0f172a !important;
+			}
+			.theme-toggle-btn {
+				border: 1px solid var(--glass-border);
+				color: inherit;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				width: 36px;
+				height: 36px;
+				border-radius: 10px;
+				background: var(--glass-bg);
+			}
+			.theme-icon::after {
+				content: "🌙";
+			}
+			[data-bs-theme="light"] .theme-icon::after {
+				content: "☀️";
+			}
+			.card {
+				background: var(--glass-bg);
+				backdrop-filter: blur(8px);
+				border: 1px solid var(--glass-border);
+				border-radius: 16px;
+				box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+			}
+			[data-bs-theme="light"] .card {
+				background: rgba(255, 255, 255, 0.6);
+				border: 1px solid rgba(0, 0, 0, 0.05);
+			}
+			.btn-primary {
+				background: linear-gradient(90deg, #6366f1 0%, #a855f7 100%);
+				border: none;
+				font-weight: 600;
+				padding: 0.5rem 1.2rem;
+				border-radius: 10px;
+				transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+			}
+			.btn-primary:hover {
+				transform: translateY(-2px);
+				box-shadow: 0 8px 15px rgba(99, 102, 241, 0.3);
+				filter: brightness(1.1);
+			}
+			.table-dark-custom {
+				--bs-table-bg: transparent;
+				border-radius: 16px;
+				overflow: hidden;
+				border: 1px solid var(--glass-border);
+			}
+			.event-badge {
+				border-radius: 8px;
+				padding: 5px 10px;
+				font-weight: 500;
+				border: 1px solid rgba(255, 255, 255, 0.1);
+				transition: all 0.2s ease;
+			}
+			[data-bs-theme="light"] .event-badge {
+				border: 1px solid rgba(0, 0, 0, 0.05);
+			}
+			.event-badge:hover {
+				filter: brightness(1.1);
+				transform: translateY(-1px) scale(1.02);
+				box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+			}
+		</style>
+	</body>
+</html>
