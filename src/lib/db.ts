@@ -1,131 +1,159 @@
-import fs from 'fs/promises';
-import path from 'path';
+import { neon } from '@neondatabase/serverless';
 import type { User, Event, Participant } from '../types';
 
 export type { User, Event, Participant };
 
-const DATA_DIR = path.resolve('./data');
-const USERS_FILE = path.join(DATA_DIR, 'users.json');
-const EVENTS_FILE = path.join(DATA_DIR, 'events.json');
-const PARTICIPANTS_FILE = path.join(DATA_DIR, 'participants.json');
-
-// Ensure data directory exists
-async function ensureDataDir() {
-    try {
-        await fs.mkdir(DATA_DIR, { recursive: true });
-    } catch (e) {
-        // Ignore error if exists
-    }
-}
-
-async function readJsonFile(filePath: string): Promise<any> {
-    try {
-        const data = await fs.readFile(filePath, 'utf-8');
-        // Remove UTF-8 BOM if present
-        const cleanData = data.startsWith('\uFEFF') ? data.slice(1) : data;
-        return JSON.parse(cleanData);
-    } catch (error) {
-        if ((error as any).code === 'ENOENT') return [];
-        throw error;
-    }
-}
+const sql = neon(import.meta.env.DATABASE_URL || process.env.DATABASE_URL || "");
 
 // User CRUD
 export async function getUsers(): Promise<User[]> {
-    await ensureDataDir();
-    return readJsonFile(USERS_FILE);
+    const rows = await sql`
+        SELECT id, email, password_hash as "passwordHash", nome, cognome, is_admin as "isAdmin" 
+        FROM users
+    `;
+    return rows as User[];
 }
 
 export async function saveUser(user: User): Promise<void> {
-    const users = await getUsers();
-    users.push(user);
-    await fs.writeFile(USERS_FILE, JSON.stringify(users, null, 2), 'utf-8');
+    await sql`
+        INSERT INTO users (id, email, password_hash, nome, cognome, is_admin)
+        VALUES (${user.id}, ${user.email}, ${user.passwordHash}, ${user.nome}, ${user.cognome}, ${user.isAdmin})
+    `;
 }
 
 export async function findUserByEmail(email: string): Promise<User | undefined> {
-    const users = await getUsers();
-    return users.find((u) => u.email === email);
+    const rows = await sql`
+        SELECT id, email, password_hash as "passwordHash", nome, cognome, is_admin as "isAdmin" 
+        FROM users WHERE email = ${email}
+    `;
+    return rows[0] as User | undefined;
 }
 
 export async function findUserById(id: string): Promise<User | undefined> {
-    const users = await getUsers();
-    return users.find((u) => u.id === id);
+    const rows = await sql`
+        SELECT id, email, password_hash as "passwordHash", nome, cognome, is_admin as "isAdmin" 
+        FROM users WHERE id = ${id}
+    `;
+    return rows[0] as User | undefined;
 }
 
 export async function updateUser(id: string, updates: Partial<User>): Promise<void> {
-    const users = await getUsers();
-    const index = users.findIndex((u) => u.id === id);
-    if (index === -1) throw new Error('User not found');
-    users[index] = { ...users[index], ...updates };
-    await fs.writeFile(USERS_FILE, JSON.stringify(users, null, 2), 'utf-8');
+    if (Object.keys(updates).length === 0) return;
+
+    // Mapping TS keys to DB columns
+    const mapping: Record<string, string> = {
+        email: 'email',
+        passwordHash: 'password_hash',
+        nome: 'nome',
+        cognome: 'cognome',
+        isAdmin: 'is_admin'
+    };
+
+    const sets: string[] = [];
+    const values: any[] = [];
+
+    Object.entries(updates).forEach(([key, value]) => {
+        if (mapping[key]) {
+            sets.push(`${mapping[key]} = $${sets.length + 1}`);
+            values.push(value);
+        }
+    });
+
+    if (sets.length > 0) {
+        values.push(id);
+        const query = `UPDATE users SET ${sets.join(', ')} WHERE id = $${values.length}`;
+        await sql(query, values);
+    }
 }
 
 export async function deleteUser(id: string): Promise<void> {
-    const users = await getUsers();
-    const filteredUsers = users.filter((u) => u.id !== id);
-    await fs.writeFile(USERS_FILE, JSON.stringify(filteredUsers, null, 2), 'utf-8');
+    await sql`DELETE FROM users WHERE id = ${id}`;
 }
 
 // Event CRUD
 export async function getEvents(): Promise<Event[]> {
-    await ensureDataDir();
-    return readJsonFile(EVENTS_FILE);
+    const rows = await sql`
+        SELECT id, creator_id as "creatorId", title, description, location, date, time 
+        FROM events
+    `;
+    return rows as Event[];
 }
 
 export async function saveEvent(event: Event): Promise<void> {
-    const events = await getEvents();
-    events.push(event);
-    await fs.writeFile(EVENTS_FILE, JSON.stringify(events, null, 2), 'utf-8');
+    await sql`
+        INSERT INTO events (id, creator_id, title, description, location, date, time)
+        VALUES (${event.id}, ${event.creatorId}, ${event.title}, ${event.description}, ${event.location}, ${event.date}, ${event.time})
+    `;
 }
 
 export async function getEventById(id: string): Promise<Event | undefined> {
-    const events = await getEvents();
-    return events.find(e => e.id === id);
+    const rows = await sql`
+        SELECT id, creator_id as "creatorId", title, description, location, date, time 
+        FROM events WHERE id = ${id}
+    `;
+    return rows[0] as Event | undefined;
 }
 
 export async function deleteEvent(id: string): Promise<void> {
-    const events = await getEvents();
-    const filteredEvents = events.filter(e => e.id !== id);
-    await fs.writeFile(EVENTS_FILE, JSON.stringify(filteredEvents, null, 2), 'utf-8');
+    await sql`DELETE FROM events WHERE id = ${id}`;
 }
 
 export async function updateEvent(id: string, updates: Partial<Event>): Promise<void> {
-    const events = await getEvents();
-    const index = events.findIndex(e => e.id === id);
-    if (index === -1) throw new Error('Event not found');
-    events[index] = { ...events[index], ...updates };
-    await fs.writeFile(EVENTS_FILE, JSON.stringify(events, null, 2), 'utf-8');
+    if (Object.keys(updates).length === 0) return;
+
+    const mapping: Record<string, string> = {
+        creatorId: 'creator_id',
+        title: 'title',
+        description: 'description',
+        location: 'location',
+        date: 'date',
+        time: 'time'
+    };
+
+    const sets: string[] = [];
+    const values: any[] = [];
+
+    Object.entries(updates).forEach(([key, value]) => {
+        if (mapping[key]) {
+            sets.push(`${mapping[key]} = $${sets.length + 1}`);
+            values.push(value);
+        }
+    });
+
+    if (sets.length > 0) {
+        values.push(id);
+        const query = `UPDATE events SET ${sets.join(', ')} WHERE id = $${values.length}`;
+        await sql(query, values);
+    }
 }
 
 
 // Participant CRUD
 export async function getParticipants(): Promise<Participant[]> {
-    await ensureDataDir();
-    return readJsonFile(PARTICIPANTS_FILE);
+    const rows = await sql`SELECT event_id as "eventId", user_id as "userId", timestamp FROM participants`;
+    return rows as Participant[];
 }
 
-
 export async function addParticipant(participant: Participant): Promise<void> {
-    const participants = await getParticipants();
-    // Check for duplicates
-    const exists = participants.some(p => p.eventId === participant.eventId && p.userId === participant.userId);
-    if (exists) {
-        throw new Error('User is already participating in this event.');
-    }
-    participants.push(participant);
-    await fs.writeFile(PARTICIPANTS_FILE, JSON.stringify(participants, null, 2), 'utf-8');
+    await sql`
+        INSERT INTO participants (event_id, user_id)
+        VALUES (${participant.eventId}, ${participant.userId})
+    `;
 }
 
 export async function getEventParticipants(eventId: string): Promise<User[]> {
-    const participants = await getParticipants();
-    const eventParticipants = participants.filter((p) => p.eventId === eventId);
-    const userIds = eventParticipants.map((p) => p.userId);
-    const users = await getUsers();
-    return users.filter((u) => userIds.includes(u.id));
+    const rows = await sql`
+        SELECT u.id, u.email, u.nome, u.cognome, u.is_admin as "isAdmin"
+        FROM users u
+        INNER JOIN participants p ON u.id = p.user_id
+        WHERE p.event_id = ${eventId}
+    `;
+    return rows as User[];
 }
 
 export async function removeParticipant(eventId: string, userId: string): Promise<void> {
-    const participants = await getParticipants();
-    const filteredParticipants = participants.filter(p => !(p.eventId === eventId && p.userId === userId));
-    await fs.writeFile(PARTICIPANTS_FILE, JSON.stringify(filteredParticipants, null, 2), 'utf-8');
+    await sql`
+        DELETE FROM participants 
+        WHERE event_id = ${eventId} AND user_id = ${userId}
+    `;
 }
