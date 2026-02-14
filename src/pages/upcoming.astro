@@ -37,10 +37,45 @@ eventsWithCount.forEach((e) => {
 });
 
 const sortedDates = Object.keys(groupedEvents).sort();
+const user = Astro.locals.user;
 ---
 
 <Layout title="Prossimi Eventi">
-    <h1 class="mb-4">Prossimi Eventi</h1>
+    <div
+        class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4 gap-3"
+    >
+        <div>
+            <h1 class="display-6 mb-0">Eventi Compagnia</h1>
+        </div>
+        <div class="d-flex flex-wrap align-items-center gap-3">
+            <div
+                class="btn-group shadow-sm"
+                role="group"
+                aria-label="Visualizzazione"
+            >
+                <a href="/" class="btn btn-outline-primary">
+                    <i class="bi bi-calendar3"></i>
+                    <span class="d-none d-sm-inline">Calendario</span>
+                </a>
+                <a href="/upcoming" class="btn btn-primary active">
+                    <i class="bi bi-list-ul"></i>
+                    <span class="d-none d-sm-inline">Lista</span>
+                </a>
+            </div>
+
+            {
+                user ? (
+                    <a href="/?create=true" class="btn btn-success">
+                        <i class="bi bi-plus-lg" /> Crea Evento
+                    </a>
+                ) : (
+                    <div class="alert alert-warning py-2 px-3 d-inline-block mb-0 small">
+                        Accedi per creare eventi
+                    </div>
+                )
+            }
+        </div>
+    </div>
 
     {
         sortedDates.length === 0 ? (
@@ -74,12 +109,6 @@ const sortedDates = Object.keys(groupedEvents).sort();
                                             </span>
                                             <span class="event-title">
                                                 {event.title}
-                                            </span>
-                                        </div>
-                                        <div class="d-flex align-items-center justify-content-between justify-content-sm-end w-100 w-sm-auto">
-                                            <span class="badge bg-secondary bg-opacity-25 rounded-pill text-white">
-                                                <i class="bi bi-people-fill me-1" />
-                                                {event.participantsCount}
                                             </span>
                                         </div>
                                     </button>
@@ -140,23 +169,6 @@ const sortedDates = Object.keys(groupedEvents).sort();
                 </div>
                 <div class="modal-body">
                     <p id="upDetailDesc"></p>
-                    <p>
-                        <strong>Partecipanti:</strong>
-                        <span id="upDetailCount"></span>
-                    </p>
-                    <ul
-                        id="upParticipantList"
-                        class="list-group list-group-flush small mb-3"
-                    >
-                    </ul>
-                    <button id="upJoinBtn" class="btn btn-success w-100"
-                        >Partecipa</button
-                    >
-                    <button
-                        id="upLeaveBtn"
-                        class="btn btn-outline-warning w-100 d-none"
-                        >Annulla Partecipazione</button
-                    >
                 </div>
             </div>
         </div>
@@ -185,41 +197,6 @@ const sortedDates = Object.keys(groupedEvents).sort();
                         `${data.time} - ${data.title}`;
                     document.getElementById("upDetailDesc")!.textContent =
                         data.description;
-                    document.getElementById("upDetailCount")!.textContent =
-                        data.participants.length;
-
-                    const pList = document.getElementById("upParticipantList")!;
-                    pList.innerHTML = "";
-                    data.participants.forEach((u: any) => {
-                        const li = document.createElement("li");
-                        li.className = "list-group-item px-0 py-1";
-                        li.textContent = u.nome + " " + u.cognome;
-                        pList.appendChild(li);
-                    });
-
-                    // Check join status
-                    const meRes = await fetch("/api/auth/me");
-                    const joinBtn = document.getElementById("upJoinBtn");
-
-                    if (meRes.ok) {
-                        const me = await meRes.json();
-                        const isParticipant = data.participants.some(
-                            (p: any) => p.id === me.id,
-                        );
-                        const leaveBtn = document.getElementById("upLeaveBtn");
-                        if (joinBtn) {
-                            if (isParticipant) {
-                                joinBtn.classList.add("d-none");
-                                if (leaveBtn)
-                                    leaveBtn.classList.remove("d-none");
-                            } else {
-                                joinBtn.classList.remove("d-none");
-                                if (leaveBtn) leaveBtn.classList.add("d-none");
-                            }
-                        }
-                    } else {
-                        if (joinBtn) joinBtn.classList.add("d-none");
-                    }
 
                     modal.show();
                 } catch (e) {
@@ -227,48 +204,5 @@ const sortedDates = Object.keys(groupedEvents).sort();
                 }
             });
         });
-
-        const joinBtn = document.getElementById("upJoinBtn");
-        if (joinBtn) {
-            joinBtn.addEventListener("click", async () => {
-                if (!currentId) return;
-                try {
-                    const res = await fetch("/api/join", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ eventId: currentId }),
-                    });
-                    if (res.ok) {
-                        alert("Partecipazione confermata!");
-                        window.location.reload();
-                    } else {
-                        alert("Errore");
-                    }
-                } catch (e) {
-                    console.error(e);
-                }
-            });
-        }
-        const upLeaveBtn = document.getElementById("upLeaveBtn");
-        if (upLeaveBtn) {
-            upLeaveBtn.addEventListener("click", async () => {
-                if (!currentId) return;
-                try {
-                    const res = await fetch("/api/join", {
-                        method: "DELETE",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ eventId: currentId }),
-                    });
-                    if (res.ok) {
-                        alert("Partecipazione annullata");
-                        window.location.reload();
-                    } else {
-                        alert("Errore");
-                    }
-                } catch (e) {
-                    console.error(e);
-                }
-            });
-        }
     </script>
 </Layout>

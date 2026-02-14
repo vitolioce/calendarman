@@ -1,0 +1,384 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import type { User } from "../../types";
+
+const user = Astro.locals.user as User | undefined;
+
+// Redirect se non è admin
+if (!user || !user.isAdmin) {
+    return Astro.redirect("/login");
+}
+
+const users = await fetch(new URL("/api/admin/users", Astro.url), {
+    headers: {
+        cookie: Astro.request.headers.get("cookie") || "",
+    },
+}).then((res) => res.json());
+---
+
+<Layout title="Gestione Utenti - Admin">
+    <div class="container-fluid">
+        <div class="row mb-4">
+            <div class="col">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h1 class="display-6 mb-1">
+                            <i class="bi bi-people-fill text-primary"></i> Gestione
+                            Utenti
+                        </h1>
+                        <p class="text-muted">
+                            Pannello amministrativo per la gestione degli utenti
+                        </p>
+                    </div>
+                    <div>
+                        <button
+                            class="btn btn-primary btn-lg"
+                            data-bs-toggle="modal"
+                            data-bs-target="#createUserModal"
+                        >
+                            <i class="bi bi-person-plus-fill"></i> Nuovo Utente
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Alert per messaggi -->
+        <div id="alertContainer"></div>
+
+        <!-- Tabella Utenti -->
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-list-ul"></i> Utenti Registrati
+                </h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th scope="col">Nome</th>
+                                <th scope="col">Email</th>
+                                <th scope="col">Ruolo</th>
+                                <th scope="col" class="text-end">Azioni</th>
+                            </tr>
+                        </thead>
+                        <tbody id="usersTableBody">
+                            {
+                                users.map((u: any) => (
+                                    <tr data-user-id={u.id}>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="avatar-circle bg-primary text-white me-2">
+                                                    {u.nome.charAt(0)}
+                                                    {u.cognome.charAt(0)}
+                                                </div>
+                                                <div>
+                                                    <strong>
+                                                        {u.nome} {u.cognome}
+                                                    </strong>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <i class="bi bi-envelope text-muted" />{" "}
+                                            {u.email}
+                                        </td>
+                                        <td>
+                                            {u.isAdmin ? (
+                                                <span class="badge bg-danger">
+                                                    <i class="bi bi-shield-fill-check" />{" "}
+                                                    Admin
+                                                </span>
+                                            ) : (
+                                                <span class="badge bg-secondary">
+                                                    <i class="bi bi-person" />{" "}
+                                                    Utente
+                                                </span>
+                                            )}
+                                        </td>
+                                        <td class="text-end">
+                                            {u.id === user.id ? (
+                                                <span class="text-muted small">
+                                                    <i class="bi bi-person-check" />{" "}
+                                                    Tu
+                                                </span>
+                                            ) : (
+                                                <button
+                                                    class="btn btn-sm btn-outline-danger delete-user-btn"
+                                                    data-user-id={u.id}
+                                                    data-user-name={`${u.nome} ${u.cognome}`}
+                                                >
+                                                    <i class="bi bi-trash" />{" "}
+                                                    Elimina
+                                                </button>
+                                            )}
+                                        </td>
+                                    </tr>
+                                ))
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="card-footer text-muted">
+                Totale utenti: <strong>{users.length}</strong>
+            </div>
+        </div>
+
+        <div class="mt-4">
+            <a href="/" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Torna al Calendario
+            </a>
+        </div>
+    </div>
+
+    <!-- Modal Creazione Utente -->
+    <div
+        class="modal fade"
+        id="createUserModal"
+        tabindex="-1"
+        aria-labelledby="createUserModalLabel"
+        aria-hidden="true"
+    >
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="createUserModalLabel">
+                        <i class="bi bi-person-plus"></i> Crea Nuovo Utente
+                    </h5>
+                    <button
+                        type="button"
+                        class="btn-close"
+                        data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="create-user-form">
+                        <div class="mb-3">
+                            <label for="userNome" class="form-label"
+                                >Nome *</label
+                            >
+                            <input
+                                type="text"
+                                class="form-control"
+                                id="userNome"
+                                required
+                            />
+                        </div>
+                        <div class="mb-3">
+                            <label for="userCognome" class="form-label"
+                                >Cognome *</label
+                            >
+                            <input
+                                type="text"
+                                class="form-control"
+                                id="userCognome"
+                                required
+                            />
+                        </div>
+                        <div class="mb-3">
+                            <label for="userEmail" class="form-label"
+                                >Email *</label
+                            >
+                            <input
+                                type="email"
+                                class="form-control"
+                                id="userEmail"
+                                required
+                            />
+                        </div>
+                        <div class="mb-3">
+                            <label for="userPassword" class="form-label"
+                                >Password *</label
+                            >
+                            <input
+                                type="password"
+                                class="form-control"
+                                id="userPassword"
+                                required
+                                minlength="6"
+                            />
+                            <div class="form-text">Minimo 6 caratteri</div>
+                        </div>
+                        <div class="mb-3 form-check">
+                            <input
+                                type="checkbox"
+                                class="form-check-input"
+                                id="userIsAdmin"
+                            />
+                            <label class="form-check-label" for="userIsAdmin">
+                                <i class="bi bi-shield-fill-check text-danger"
+                                ></i> Rendi amministratore
+                            </label>
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-save"></i> Crea Utente
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .avatar-circle {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.875rem;
+        }
+
+        .table tbody tr {
+            transition: background-color 0.2s ease;
+        }
+
+        .table tbody tr:hover {
+            background-color: rgba(0, 123, 255, 0.05);
+        }
+
+        .delete-user-btn {
+            transition: all 0.2s ease;
+        }
+
+        .delete-user-btn:hover {
+            transform: scale(1.05);
+        }
+    </style>
+
+    <script>
+        import { Modal } from "bootstrap";
+
+        const createUserModal = new Modal(
+            document.getElementById("createUserModal")!,
+        );
+
+        // Funzione per mostrare alert
+        function showAlert(message: string, type: string = "success") {
+            const alertContainer = document.getElementById("alertContainer")!;
+            const alert = document.createElement("div");
+            alert.className = `alert alert-${type} alert-dismissible fade show`;
+            alert.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            alertContainer.appendChild(alert);
+
+            setTimeout(() => {
+                alert.remove();
+            }, 5000);
+        }
+
+        // Handle Create User
+        const createForm = document.getElementById("create-user-form");
+        if (createForm) {
+            createForm.addEventListener("submit", async (e) => {
+                e.preventDefault();
+
+                const nome = (
+                    document.getElementById("userNome") as HTMLInputElement
+                ).value;
+                const cognome = (
+                    document.getElementById("userCognome") as HTMLInputElement
+                ).value;
+                const email = (
+                    document.getElementById("userEmail") as HTMLInputElement
+                ).value;
+                const password = (
+                    document.getElementById("userPassword") as HTMLInputElement
+                ).value;
+                const isAdmin = (
+                    document.getElementById("userIsAdmin") as HTMLInputElement
+                ).checked;
+
+                try {
+                    const res = await fetch("/api/admin/users", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            nome,
+                            cognome,
+                            email,
+                            password,
+                            isAdmin,
+                        }),
+                    });
+
+                    if (res.ok) {
+                        showAlert(
+                            `✅ Utente <strong>${nome} ${cognome}</strong> creato con successo!`,
+                            "success",
+                        );
+                        createUserModal.hide();
+                        (createForm as HTMLFormElement).reset();
+                        setTimeout(() => window.location.reload(), 1500);
+                    } else {
+                        const data = await res.json();
+                        showAlert(
+                            `❌ ${data.error || "Errore durante la creazione"}`,
+                            "danger",
+                        );
+                    }
+                } catch (error) {
+                    console.error(error);
+                    showAlert("❌ Errore di connessione", "danger");
+                }
+            });
+        }
+
+        // Handle Delete User
+        const deleteButtons = document.querySelectorAll(".delete-user-btn");
+        deleteButtons.forEach((btn) => {
+            btn.addEventListener("click", async (e) => {
+                const userId = btn.getAttribute("data-user-id");
+                const userName = btn.getAttribute("data-user-name");
+
+                if (
+                    !confirm(
+                        `Sei sicuro di voler eliminare l'utente ${userName}?\n\nQuesta azione è irreversibile.`,
+                    )
+                ) {
+                    return;
+                }
+
+                try {
+                    const res = await fetch("/api/admin/users", {
+                        method: "DELETE",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ userId }),
+                    });
+
+                    if (res.ok) {
+                        showAlert(
+                            `✅ Utente <strong>${userName}</strong> eliminato`,
+                            "warning",
+                        );
+                        // Rimuovi la riga dalla tabella
+                        const row = document.querySelector(
+                            `tr[data-user-id="${userId}"]`,
+                        );
+                        if (row) {
+                            row.remove();
+                        }
+                    } else {
+                        const data = await res.json();
+                        showAlert(
+                            `❌ ${data.error || "Errore durante l'eliminazione"}`,
+                            "danger",
+                        );
+                    }
+                } catch (error) {
+                    console.error(error);
+                    showAlert("❌ Errore di connessione", "danger");
+                }
+            });
+        });
+    </script>
+</Layout>

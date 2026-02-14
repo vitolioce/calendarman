@@ -47,6 +47,25 @@ export async function findUserByEmail(email: string): Promise<User | undefined> 
     return users.find((u) => u.email === email);
 }
 
+export async function findUserById(id: string): Promise<User | undefined> {
+    const users = await getUsers();
+    return users.find((u) => u.id === id);
+}
+
+export async function updateUser(id: string, updates: Partial<User>): Promise<void> {
+    const users = await getUsers();
+    const index = users.findIndex((u) => u.id === id);
+    if (index === -1) throw new Error('User not found');
+    users[index] = { ...users[index], ...updates };
+    await fs.writeFile(USERS_FILE, JSON.stringify(users, null, 2), 'utf-8');
+}
+
+export async function deleteUser(id: string): Promise<void> {
+    const users = await getUsers();
+    const filteredUsers = users.filter((u) => u.id !== id);
+    await fs.writeFile(USERS_FILE, JSON.stringify(filteredUsers, null, 2), 'utf-8');
+}
+
 // Event CRUD
 export async function getEvents(): Promise<Event[]> {
     await ensureDataDir();

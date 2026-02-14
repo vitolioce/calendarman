@@ -2,8 +2,9 @@
   {
     "id": "b307c762-a07d-4d98-b0c9-39aa2c9887bc",
     "email": "vitolioce@gmail.com",
-    "passwordHash": "$2b$10$6cbhtOLQwZwpdY6jm.RmReSXO1IMoFHcxEU7Ds2DxY63jkhcDX/.S",
+    "passwordHash": "$2b$10$5kaHzM27FbWW2KbLHEc1Ju9e6KY1IRsNZNYby7pgagGrvv21if87e",
     "nome": "Vito",
-    "cognome": "Lioce"
+    "cognome": "Lioce",
+    "isAdmin": true
   }
 ]

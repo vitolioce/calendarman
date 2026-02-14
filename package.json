@@ -18,6 +18,7 @@
     "astro-bootstrap": "^0.7.2",
     "bcryptjs": "^3.0.3",
     "bootstrap": "^5.3.8",
+    "bootstrap-icons": "^1.13.1",
     "typescript": "^5.9.3",
     "uuid": "^13.0.0"
   },

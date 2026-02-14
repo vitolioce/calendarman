@@ -1,5 +1,6 @@
 ---
 import "bootstrap/dist/css/bootstrap.min.css";
+import "bootstrap-icons/font/bootstrap-icons.css";
 
 interface Props {
 	title: string;
@@ -72,7 +73,9 @@ const user = Astro.locals.user;
 	<body>
 		<nav class="navbar navbar-expand-lg mb-4 sticky-top">
 			<div class="container">
-				<a class="navbar-brand" href="/">Compagnia dell'Obelisco - Prossimi eventi</a>
+				<a class="navbar-brand" href="/"
+					>Compagnia dell'Obelisco</a
+				>
 				<button
 					class="navbar-toggler"
 					type="button"
@@ -94,6 +97,19 @@ const user = Astro.locals.user;
 								>Prossimi Eventi</a
 							>
 						</li>
+						{
+							user?.isAdmin && (
+								<li class="nav-item">
+									<a
+										class="nav-link admin-link"
+										href="/admin/users"
+									>
+										<i class="bi bi-shield-fill-check" />{" "}
+										Admin
+									</a>
+								</li>
+							)
+						}
 					</ul>
 					<div class="d-flex align-items-center">
 						<button
@@ -107,15 +123,10 @@ const user = Astro.locals.user;
 								<div id="auth-buttons">
 									<a
 										href="/login"
-										class="btn btn-primary btn-sm me-2"
+										class="btn btn-primary btn-sm"
 									>
+										<i class="bi bi-box-arrow-in-right" />{" "}
 										Login
-									</a>
-									<a
-										href="/register"
-										class="btn btn-secondary btn-sm"
-									>
-										Register
 									</a>
 								</div>
 							) : (

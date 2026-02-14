@@ -4,6 +4,7 @@ export interface User {
   passwordHash: string;
   nome: string;
   cognome: string;
+  isAdmin?: boolean; // Flag per identificare gli amministratori
 }
 
 export interface Event {
