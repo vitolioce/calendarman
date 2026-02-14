@@ -3,7 +3,7 @@
     "id": "ecdf058b-ae6f-4950-bb27-e993ea7f5c27",
     "creatorId": "b307c762-a07d-4d98-b0c9-39aa2c9887bc",
     "title": "Evento D&D Kazuma",
-    "description": "Pomeriggio di gioco al Kazuma di Ravenna\nMaster coinvolti: \nAlex, Vito, Giulio, Dario, Vanessa",
+    "description": "<p><strong>Pomeriggio di gioco</strong> al Kazuma di Ravenna</p><p>Master coinvolti:</p><ol><li data-list=\"bullet\"><span class=\"ql-ui\" contenteditable=\"false\"></span>Alex</li><li data-list=\"bullet\"><span class=\"ql-ui\" contenteditable=\"false\"></span>Vito</li><li data-list=\"bullet\"><span class=\"ql-ui\" contenteditable=\"false\"></span>Giulio</li><li data-list=\"bullet\"><span class=\"ql-ui\" contenteditable=\"false\"></span>Dario</li><li data-list=\"bullet\"><span class=\"ql-ui\" contenteditable=\"false\"></span>Vanessa</li></ol>",
     "date": "2026-02-21",
     "time": "14:30",
     "location": "Kazuma Ravenna"
@@ -12,16 +12,18 @@
     "id": "fd54562e-1070-4214-ba6b-e35fce95ad5b",
     "creatorId": "b307c762-a07d-4d98-b0c9-39aa2c9887bc",
     "title": "Evento ragazzi gifted",
-    "description": "Evento con 20-30 ragazzi gifted dai 9 ai 15 anni. Siamo in attesa di conferma del numero dei partecipanti e delle loro età Durante il pomeriggio ogni master preparerà 2 mini one shot della durata di circa 2 ore. 1° One shot dalle 14.30 alle 16.30 e la seconda dalle 17 alle 19.00. ",
+    "description": "<p>Evento con<strong> 20-30 ragazzi gifted dai 9 ai 15 anni</strong>. Siamo in attesa di conferma del numero dei partecipanti e delle loro età </p><p>Durante il pomeriggio ogni master preparerà 2 mini one shot della durata di circa 2 ore. </p><ol><li data-list=\"bullet\"><span class=\"ql-ui\" contenteditable=\"false\"></span>1° One shot dalle 14.30 alle 16.30</li><li data-list=\"bullet\"><span class=\"ql-ui\" contenteditable=\"false\"></span>2° One shot dalle 17 alle 19.00. </li></ol>",
     "date": "2026-03-07",
-    "time": "17:00"
+    "time": "17:00",
+    "location": "Hotel Mattei (Ravenna)"
   },
   {
     "id": "2e51f392-8999-437f-abec-1ff9cf2f8e26",
     "creatorId": "b307c762-a07d-4d98-b0c9-39aa2c9887bc",
     "title": "D&D alla biblio",
-    "description": "Tavolo di gioco alla biblioteca di Bagnacavallo",
+    "description": "<p>Tavolo di gioco alla biblioteca di Bagnacavallo</p>",
     "date": "2026-02-28",
-    "time": "14:30"
+    "time": "14:30",
+    "location": "Biblioteca di Bagnacavallo"
   }
 ]

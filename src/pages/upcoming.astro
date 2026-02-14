@@ -176,7 +176,12 @@ const user = Astro.locals.user;
                         data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <p id="upDetailDesc" class="lead"></p>
+                    <div
+                        id="upDetailDesc"
+                        class="mb-3 bg-light p-3 rounded"
+                        style="min-height: 50px; color: #333;"
+                    >
+                    </div>
                     <p class="mb-3">
                         <i class="bi bi-geo-alt-fill text-primary"></i>
                         <span id="upDetailLocation" class="fw-bold"></span>
@@ -244,13 +249,8 @@ const user = Astro.locals.user;
                             />
                         </div>
                         <div class="mb-3">
-                            <label for="upEditDescInput" class="form-label"
-                                >Descrizione</label
-                            >
-                            <textarea
-                                class="form-control"
-                                id="upEditDescInput"
-                                rows="3"></textarea>
+                            <label class="form-label">Descrizione</label>
+                            <div id="upEditEventDescEditor"></div>
                         </div>
                         <div class="row">
                             <div class="col-md-6 mb-3">
@@ -289,6 +289,28 @@ const user = Astro.locals.user;
 
     <script>
         import { Modal } from "bootstrap";
+        declare var Quill: any;
+
+        const quillConfig = {
+            theme: "snow",
+            modules: {
+                toolbar: [
+                    ["bold", "italic", "strike"],
+                    ["link", "blockquote", "code-block"],
+                    [{ list: "ordered" }, { list: "bullet" }],
+                    ["clean"],
+                ],
+            },
+        };
+
+        let upEditQuill: any;
+
+        document.addEventListener("DOMContentLoaded", () => {
+            const editorEl = document.getElementById("upEditEventDescEditor");
+            if (editorEl) {
+                upEditQuill = new Quill("#upEditEventDescEditor", quillConfig);
+            }
+        });
 
         const triggers = document.querySelectorAll(".event-trigger");
         const modalEl = document.getElementById("upcomingDetailModal");
@@ -308,8 +330,8 @@ const user = Astro.locals.user;
 
                     document.getElementById("upDetailTitle")!.textContent =
                         `${data.time} - ${data.title}`;
-                    document.getElementById("upDetailDesc")!.textContent =
-                        data.description || "Nessuna descrizione.";
+                    document.getElementById("upDetailDesc")!.innerHTML =
+                        data.description || "<i>Nessuna descrizione.</i>";
                     document.getElementById("upDetailLocation")!.textContent =
                         data.location || "Non specificato";
                     // Logic for management buttons
@@ -377,11 +399,10 @@ const user = Astro.locals.user;
                 (
                     document.getElementById("upEditTitle") as HTMLInputElement
                 ).value = data.title;
-                (
-                    document.getElementById(
-                        "upEditDescInput",
-                    ) as HTMLTextAreaElement
-                ).value = data.description || "";
+
+                if (upEditQuill) {
+                    upEditQuill.root.innerHTML = data.description || "";
+                }
                 (
                     document.getElementById("upEditDate") as HTMLInputElement
                 ).value = data.date;
@@ -413,11 +434,9 @@ const user = Astro.locals.user;
                         "upEditLocation",
                     ) as HTMLInputElement
                 ).value;
-                const description = (
-                    document.getElementById(
-                        "upEditDescInput",
-                    ) as HTMLTextAreaElement
-                ).value;
+                const description = upEditQuill
+                    ? upEditQuill.root.innerHTML
+                    : "";
                 const date = (
                     document.getElementById("upEditDate") as HTMLInputElement
                 ).value;

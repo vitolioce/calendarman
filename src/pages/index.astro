@@ -115,13 +115,8 @@ const eventsWithCount = events.map((e) => ({
 							/>
 						</div>
 						<div class="mb-3">
-							<label for="eventDesc" class="form-label"
-								>Descrizione</label
-							>
-							<textarea
-								class="form-control"
-								id="eventDesc"
-								rows="3"></textarea>
+							<label class="form-label">Descrizione</label>
+							<div id="eventDescEditor"></div>
 						</div>
 						<div class="row">
 							<div class="col-md-6 mb-3">
@@ -181,7 +176,12 @@ const eventsWithCount = events.map((e) => ({
 				<div class="modal-body">
 					<div class="row">
 						<div class="col-12">
-							<p id="detailDesc" class="lead"></p>
+							<div
+								id="detailDesc"
+								class="mb-3 bg-light p-3 rounded"
+								style="min-height: 50px; color: #333;"
+							>
+							</div>
 							<ul class="list-unstyled">
 								<li>
 									<strong>Data:</strong>
@@ -268,13 +268,8 @@ const eventsWithCount = events.map((e) => ({
 							/>
 						</div>
 						<div class="mb-3">
-							<label for="editEventDesc" class="form-label"
-								>Descrizione</label
-							>
-							<textarea
-								class="form-control"
-								id="editEventDesc"
-								rows="3"></textarea>
+							<label class="form-label">Descrizione</label>
+							<div id="editEventDescEditor"></div>
 						</div>
 						<div class="row">
 							<div class="col-md-6 mb-3">
@@ -313,6 +308,34 @@ const eventsWithCount = events.map((e) => ({
 
 	<script>
 		import { Modal } from "bootstrap";
+		declare var Quill: any;
+
+		// Initialize Quill editors
+		const quillConfig = {
+			theme: "snow",
+			modules: {
+				toolbar: [
+					["bold", "italic", "strike"],
+					["link", "blockquote", "code-block"],
+					[{ list: "ordered" }, { list: "bullet" }],
+					["clean"],
+				],
+			},
+		};
+
+		let createQuill: any;
+		let editQuill: any;
+
+		document.addEventListener("DOMContentLoaded", () => {
+			const createEditorEl = document.getElementById("eventDescEditor");
+			if (createEditorEl) {
+				createQuill = new Quill("#eventDescEditor", quillConfig);
+			}
+			const editEditorEl = document.getElementById("editEventDescEditor");
+			if (editEditorEl) {
+				editQuill = new Quill("#editEventDescEditor", quillConfig);
+			}
+		});
 
 		// Auto-open create modal if query param exists
 		const urlParams = new URLSearchParams(window.location.search);
@@ -338,9 +361,9 @@ const eventsWithCount = events.map((e) => ({
 				const title = (
 					document.getElementById("eventTitle") as HTMLInputElement
 				).value;
-				const description = (
-					document.getElementById("eventDesc") as HTMLTextAreaElement
-				).value;
+				const description = createQuill
+					? createQuill.root.innerHTML
+					: "";
 				const location = (
 					document.getElementById("eventLocation") as HTMLInputElement
 				).value;
@@ -401,8 +424,8 @@ const eventsWithCount = events.map((e) => ({
 					// Populate modal
 					document.getElementById("detailTitle")!.textContent =
 						data.title;
-					document.getElementById("detailDesc")!.textContent =
-						data.description || "Nessuna descrizione.";
+					document.getElementById("detailDesc")!.innerHTML =
+						data.description || "<i>Nessuna descrizione.</i>";
 					document.getElementById("detailDate")!.textContent =
 						new Date(data.date).toLocaleDateString("it-IT");
 					document.getElementById("detailTime")!.textContent =
@@ -471,11 +494,10 @@ const eventsWithCount = events.map((e) => ({
 							"editEventTitle",
 						) as HTMLInputElement
 					).value = data.title;
-					(
-						document.getElementById(
-							"editEventDesc",
-						) as HTMLTextAreaElement
-					).value = data.description || "";
+
+					if (editQuill) {
+						editQuill.root.innerHTML = data.description || "";
+					}
 					(
 						document.getElementById(
 							"editEventDate",
@@ -513,11 +535,7 @@ const eventsWithCount = events.map((e) => ({
 						"editEventTitle",
 					) as HTMLInputElement
 				).value;
-				const description = (
-					document.getElementById(
-						"editEventDesc",
-					) as HTMLTextAreaElement
-				).value;
+				const description = editQuill ? editQuill.root.innerHTML : "";
 				const location = (
 					document.getElementById(
 						"editEventLocation",

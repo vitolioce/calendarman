@@ -69,13 +69,45 @@ const user = Astro.locals.user;
 					}
 				});
 		</script>
+		<!-- Quill Rich Text Editor -->
+		<link
+			href="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css"
+			rel="stylesheet"
+		/>
+		<script
+			src="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.js"
+			is:inline></script>
+		<style is:inline>
+			/* Custom styling for Quill to match dark mode */
+			[data-bs-theme="dark"] .ql-toolbar {
+				background-color: #1e293b;
+				border-color: rgba(255, 255, 255, 0.1) !important;
+			}
+			[data-bs-theme="dark"] .ql-container {
+				border-color: rgba(255, 255, 255, 0.1) !important;
+				background-color: rgba(255, 255, 255, 0.05);
+				color: #f8fafc;
+			}
+			[data-bs-theme="dark"] .ql-stroke {
+				stroke: #f8fafc !important;
+			}
+			[data-bs-theme="dark"] .ql-fill {
+				fill: #f8fafc !important;
+			}
+			[data-bs-theme="dark"] .ql-picker {
+				color: #f8fafc !important;
+			}
+			.ql-editor {
+				min-height: 150px;
+				font-family: inherit;
+				font-size: 1rem;
+			}
+		</style>
 	</head>
 	<body>
 		<nav class="navbar navbar-expand-lg mb-4 sticky-top">
 			<div class="container">
-				<a class="navbar-brand" href="/"
-					>Compagnia dell'Obelisco</a
-				>
+				<a class="navbar-brand" href="/">Compagnia dell'Obelisco</a>
 				<button
 					class="navbar-toggler"
 					type="button"
