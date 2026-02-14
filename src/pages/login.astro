@@ -22,12 +22,21 @@ import Layout from "../layouts/Layout.astro";
                             <label for="password" class="form-label"
                                 >Password</label
                             >
-                            <input
-                                type="password"
-                                class="form-control"
-                                id="password"
-                                required
-                            />
+                            <div class="input-group">
+                                <input
+                                    type="password"
+                                    class="form-control"
+                                    id="password"
+                                    required
+                                />
+                                <button
+                                    class="btn btn-outline-secondary"
+                                    type="button"
+                                    id="togglePassword"
+                                >
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                            </div>
                         </div>
                         <div class="d-grid">
                             <button type="submit" class="btn btn-primary"
@@ -55,9 +64,26 @@ import Layout from "../layouts/Layout.astro";
                 const email = (
                     document.getElementById("email") as HTMLInputElement
                 ).value;
-                const password = (
-                    document.getElementById("password") as HTMLInputElement
-                ).value;
+                const passwordInput = document.getElementById(
+                    "password",
+                ) as HTMLInputElement;
+                const togglePassword =
+                    document.getElementById("togglePassword");
+                const toggleIcon = togglePassword?.querySelector("i");
+
+                if (togglePassword && passwordInput && toggleIcon) {
+                    togglePassword.addEventListener("click", () => {
+                        const type =
+                            passwordInput.getAttribute("type") === "password"
+                                ? "text"
+                                : "password";
+                        passwordInput.setAttribute("type", type);
+                        toggleIcon.classList.toggle("bi-eye");
+                        toggleIcon.classList.toggle("bi-eye-slash");
+                    });
+                }
+
+                const password = passwordInput.value;
 
                 try {
                     const res = await fetch("/api/auth/login", {

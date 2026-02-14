@@ -99,21 +99,32 @@ const users = await fetch(new URL("/api/admin/users", Astro.url), {
                                             )}
                                         </td>
                                         <td class="text-end">
-                                            {u.id === user.id ? (
-                                                <span class="text-muted small">
-                                                    <i class="bi bi-person-check" />{" "}
-                                                    Tu
-                                                </span>
-                                            ) : (
+                                            <div class="d-flex gap-2 justify-content-end align-items-center">
+                                                {u.id === user.id && (
+                                                    <span class="badge bg-success-subtle text-success border border-success-subtle me-1">
+                                                        <i class="bi bi-person-check-fill" />{" "}
+                                                        Tu
+                                                    </span>
+                                                )}
                                                 <button
-                                                    class="btn btn-sm btn-outline-danger delete-user-btn"
+                                                    class="btn btn-sm btn-outline-primary change-password-btn"
                                                     data-user-id={u.id}
                                                     data-user-name={`${u.nome} ${u.cognome}`}
+                                                    title="Cambia Password"
                                                 >
-                                                    <i class="bi bi-trash" />{" "}
-                                                    Elimina
+                                                    <i class="bi bi-key" />
                                                 </button>
-                                            )}
+                                                {u.id !== user.id && (
+                                                    <button
+                                                        class="btn btn-sm btn-outline-danger delete-user-btn"
+                                                        data-user-id={u.id}
+                                                        data-user-name={`${u.nome} ${u.cognome}`}
+                                                        title="Elimina Utente"
+                                                    >
+                                                        <i class="bi bi-trash" />
+                                                    </button>
+                                                )}
+                                            </div>
                                         </td>
                                     </tr>
                                 ))
@@ -133,66 +144,65 @@ const users = await fetch(new URL("/api/admin/users", Astro.url), {
             </a>
         </div>
     </div>
+</Layout>
 
-    <!-- Modal Creazione Utente -->
-    <div
-        class="modal fade"
-        id="createUserModal"
-        tabindex="-1"
-        aria-labelledby="createUserModalLabel"
-        aria-hidden="true"
-    >
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="createUserModalLabel">
-                        <i class="bi bi-person-plus"></i> Crea Nuovo Utente
-                    </h5>
-                    <button
-                        type="button"
-                        class="btn-close"
-                        data-bs-dismiss="modal"
-                        aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="create-user-form">
-                        <div class="mb-3">
-                            <label for="userNome" class="form-label"
-                                >Nome *</label
-                            >
-                            <input
-                                type="text"
-                                class="form-control"
-                                id="userNome"
-                                required
-                            />
-                        </div>
-                        <div class="mb-3">
-                            <label for="userCognome" class="form-label"
-                                >Cognome *</label
-                            >
-                            <input
-                                type="text"
-                                class="form-control"
-                                id="userCognome"
-                                required
-                            />
-                        </div>
-                        <div class="mb-3">
-                            <label for="userEmail" class="form-label"
-                                >Email *</label
-                            >
-                            <input
-                                type="email"
-                                class="form-control"
-                                id="userEmail"
-                                required
-                            />
-                        </div>
-                        <div class="mb-3">
-                            <label for="userPassword" class="form-label"
-                                >Password *</label
-                            >
+<!-- Modal Creazione Utente -->
+<div
+    class="modal fade"
+    id="createUserModal"
+    tabindex="-1"
+    aria-labelledby="createUserModalLabel"
+    aria-hidden="true"
+>
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="createUserModalLabel">
+                    <i class="bi bi-person-plus"></i> Crea Nuovo Utente
+                </h5>
+                <button
+                    type="button"
+                    class="btn-close"
+                    data-bs-dismiss="modal"
+                    aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="create-user-form">
+                    <div class="mb-3">
+                        <label for="userNome" class="form-label">Nome *</label>
+                        <input
+                            type="text"
+                            class="form-control"
+                            id="userNome"
+                            required
+                        />
+                    </div>
+                    <div class="mb-3">
+                        <label for="userCognome" class="form-label"
+                            >Cognome *</label
+                        >
+                        <input
+                            type="text"
+                            class="form-control"
+                            id="userCognome"
+                            required
+                        />
+                    </div>
+                    <div class="mb-3">
+                        <label for="userEmail" class="form-label">Email *</label
+                        >
+                        <input
+                            type="email"
+                            class="form-control"
+                            id="userEmail"
+                            required
+                        />
+                    </div>
+                    <div class="mb-3">
+                        <label for="userPassword" class="form-label"
+                            >Password *</label
+                        >
+                        <div class="input-group">
                             <input
                                 type="password"
                                 class="form-control"
@@ -200,185 +210,353 @@ const users = await fetch(new URL("/api/admin/users", Astro.url), {
                                 required
                                 minlength="6"
                             />
-                            <div class="form-text">Minimo 6 caratteri</div>
-                        </div>
-                        <div class="mb-3 form-check">
-                            <input
-                                type="checkbox"
-                                class="form-check-input"
-                                id="userIsAdmin"
-                            />
-                            <label class="form-check-label" for="userIsAdmin">
-                                <i class="bi bi-shield-fill-check text-danger"
-                                ></i> Rendi amministratore
-                            </label>
-                        </div>
-                        <div class="d-grid">
-                            <button type="submit" class="btn btn-primary">
-                                <i class="bi bi-save"></i> Crea Utente
+                            <button
+                                class="btn btn-outline-secondary"
+                                type="button"
+                                id="toggleUserPassword"
+                            >
+                                <i class="bi bi-eye"></i>
                             </button>
                         </div>
-                    </form>
-                </div>
+                        <div class="form-text">Minimo 6 caratteri</div>
+                    </div>
+                    <div class="mb-3 form-check">
+                        <input
+                            type="checkbox"
+                            class="form-check-input"
+                            id="userIsAdmin"
+                        />
+                        <label class="form-check-label" for="userIsAdmin">
+                            <i class="bi bi-shield-fill-check text-danger"></i> Rendi
+                            amministratore
+                        </label>
+                    </div>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-save"></i> Crea Utente
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
+</div>
 
-    <style>
-        .avatar-circle {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            font-size: 0.875rem;
-        }
+<!-- Modal Cambio Password -->
+<div
+    class="modal fade"
+    id="changePasswordModal"
+    tabindex="-1"
+    aria-labelledby="changePasswordModalLabel"
+    aria-hidden="true"
+>
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="changePasswordModalLabel">
+                    <i class="bi bi-key"></i> Cambia Password per <span
+                        id="targetUserName"></span>
+                </h5>
+                <button
+                    type="button"
+                    class="btn-close"
+                    data-bs-dismiss="modal"
+                    aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="change-password-form">
+                    <input type="hidden" id="changePasswordUserId" />
+                    <div class="mb-3">
+                        <label for="newPassword" class="form-label"
+                            >Nuova Password *</label
+                        >
+                        <div class="input-group">
+                            <input
+                                type="password"
+                                class="form-control"
+                                id="newPassword"
+                                required
+                                minlength="6"
+                            />
+                            <button
+                                class="btn btn-outline-secondary"
+                                type="button"
+                                id="toggleNewPassword"
+                            >
+                                <i class="bi bi-eye"></i>
+                            </button>
+                        </div>
+                        <div class="form-text">Minimo 6 caratteri</div>
+                    </div>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-warning shadow-sm">
+                            <i class="bi bi-check-circle"></i> Conferma Cambio Password
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
 
-        .table tbody tr {
-            transition: background-color 0.2s ease;
-        }
+<style>
+    .avatar-circle {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 0.875rem;
+    }
 
-        .table tbody tr:hover {
-            background-color: rgba(0, 123, 255, 0.05);
-        }
+    .table tbody tr {
+        transition: background-color 0.2s ease;
+    }
 
-        .delete-user-btn {
-            transition: all 0.2s ease;
-        }
+    .table tbody tr:hover {
+        background-color: rgba(0, 123, 255, 0.05);
+    }
 
-        .delete-user-btn:hover {
-            transform: scale(1.05);
-        }
-    </style>
+    .delete-user-btn {
+        transition: all 0.2s ease;
+    }
 
-    <script>
-        import { Modal } from "bootstrap";
+    .delete-user-btn:hover {
+        transform: scale(1.05);
+    }
+</style>
 
-        const createUserModal = new Modal(
-            document.getElementById("createUserModal")!,
-        );
+<script>
+    import { Modal } from "bootstrap";
 
-        // Funzione per mostrare alert
-        function showAlert(message: string, type: string = "success") {
-            const alertContainer = document.getElementById("alertContainer")!;
-            const alert = document.createElement("div");
-            alert.className = `alert alert-${type} alert-dismissible fade show`;
-            alert.innerHTML = `
+    const createUserModal = new Modal(
+        document.getElementById("createUserModal")!,
+    );
+    const changePasswordModal = new Modal(
+        document.getElementById("changePasswordModal")!,
+    );
+
+    // Toggle Password Visibility
+    const passwordInput = document.getElementById(
+        "userPassword",
+    ) as HTMLInputElement;
+    const toggleBtn = document.getElementById("toggleUserPassword");
+    const toggleIcon = toggleBtn?.querySelector("i");
+
+    if (toggleBtn && passwordInput && toggleIcon) {
+        toggleBtn.addEventListener("click", () => {
+            const type =
+                passwordInput.getAttribute("type") === "password"
+                    ? "text"
+                    : "password";
+            passwordInput.setAttribute("type", type);
+            toggleIcon.classList.toggle("bi-eye");
+            toggleIcon.classList.toggle("bi-eye-slash");
+        });
+    }
+
+    // Toggle Password Visibility (Change Password Modal)
+    const newPasswordInput = document.getElementById(
+        "newPassword",
+    ) as HTMLInputElement;
+    const toggleNewBtn = document.getElementById("toggleNewPassword");
+    const toggleNewIcon = toggleNewBtn?.querySelector("i");
+
+    if (toggleNewBtn && newPasswordInput && toggleNewIcon) {
+        toggleNewBtn.addEventListener("click", () => {
+            const type =
+                newPasswordInput.getAttribute("type") === "password"
+                    ? "text"
+                    : "password";
+            newPasswordInput.setAttribute("type", type);
+            toggleNewIcon.classList.toggle("bi-eye");
+            toggleNewIcon.classList.toggle("bi-eye-slash");
+        });
+    }
+
+    // Funzione per mostrare alert
+    function showAlert(message: string, type: string = "success") {
+        const alertContainer = document.getElementById("alertContainer")!;
+        const alert = document.createElement("div");
+        alert.className = `alert alert-${type} alert-dismissible fade show`;
+        alert.innerHTML = `
                 ${message}
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             `;
-            alertContainer.appendChild(alert);
+        alertContainer.appendChild(alert);
 
-            setTimeout(() => {
-                alert.remove();
-            }, 5000);
-        }
+        setTimeout(() => {
+            alert.remove();
+        }, 5000);
+    }
 
-        // Handle Create User
-        const createForm = document.getElementById("create-user-form");
-        if (createForm) {
-            createForm.addEventListener("submit", async (e) => {
-                e.preventDefault();
+    // Handle Create User
+    const createForm = document.getElementById("create-user-form");
+    if (createForm) {
+        createForm.addEventListener("submit", async (e) => {
+            e.preventDefault();
 
-                const nome = (
-                    document.getElementById("userNome") as HTMLInputElement
-                ).value;
-                const cognome = (
-                    document.getElementById("userCognome") as HTMLInputElement
-                ).value;
-                const email = (
-                    document.getElementById("userEmail") as HTMLInputElement
-                ).value;
-                const password = (
-                    document.getElementById("userPassword") as HTMLInputElement
-                ).value;
-                const isAdmin = (
-                    document.getElementById("userIsAdmin") as HTMLInputElement
-                ).checked;
+            const nome = (
+                document.getElementById("userNome") as HTMLInputElement
+            ).value;
+            const cognome = (
+                document.getElementById("userCognome") as HTMLInputElement
+            ).value;
+            const email = (
+                document.getElementById("userEmail") as HTMLInputElement
+            ).value;
+            const password = (
+                document.getElementById("userPassword") as HTMLInputElement
+            ).value;
+            const isAdmin = (
+                document.getElementById("userIsAdmin") as HTMLInputElement
+            ).checked;
 
-                try {
-                    const res = await fetch("/api/admin/users", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({
-                            nome,
-                            cognome,
-                            email,
-                            password,
-                            isAdmin,
-                        }),
-                    });
+            try {
+                const res = await fetch("/api/admin/users", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        nome,
+                        cognome,
+                        email,
+                        password,
+                        isAdmin,
+                    }),
+                });
 
-                    if (res.ok) {
-                        showAlert(
-                            `✅ Utente <strong>${nome} ${cognome}</strong> creato con successo!`,
-                            "success",
-                        );
-                        createUserModal.hide();
-                        (createForm as HTMLFormElement).reset();
-                        setTimeout(() => window.location.reload(), 1500);
-                    } else {
-                        const data = await res.json();
-                        showAlert(
-                            `❌ ${data.error || "Errore durante la creazione"}`,
-                            "danger",
-                        );
-                    }
-                } catch (error) {
-                    console.error(error);
-                    showAlert("❌ Errore di connessione", "danger");
+                if (res.ok) {
+                    showAlert(
+                        `✅ Utente <strong>${nome} ${cognome}</strong> creato con successo!`,
+                        "success",
+                    );
+                    createUserModal.hide();
+                    (createForm as HTMLFormElement).reset();
+                    setTimeout(() => window.location.reload(), 1500);
+                } else {
+                    const data = await res.json();
+                    showAlert(
+                        `❌ ${data.error || "Errore durante la creazione"}`,
+                        "danger",
+                    );
                 }
-            });
-        }
-
-        // Handle Delete User
-        const deleteButtons = document.querySelectorAll(".delete-user-btn");
-        deleteButtons.forEach((btn) => {
-            btn.addEventListener("click", async (e) => {
-                const userId = btn.getAttribute("data-user-id");
-                const userName = btn.getAttribute("data-user-name");
-
-                if (
-                    !confirm(
-                        `Sei sicuro di voler eliminare l'utente ${userName}?\n\nQuesta azione è irreversibile.`,
-                    )
-                ) {
-                    return;
-                }
-
-                try {
-                    const res = await fetch("/api/admin/users", {
-                        method: "DELETE",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ userId }),
-                    });
-
-                    if (res.ok) {
-                        showAlert(
-                            `✅ Utente <strong>${userName}</strong> eliminato`,
-                            "warning",
-                        );
-                        // Rimuovi la riga dalla tabella
-                        const row = document.querySelector(
-                            `tr[data-user-id="${userId}"]`,
-                        );
-                        if (row) {
-                            row.remove();
-                        }
-                    } else {
-                        const data = await res.json();
-                        showAlert(
-                            `❌ ${data.error || "Errore durante l'eliminazione"}`,
-                            "danger",
-                        );
-                    }
-                } catch (error) {
-                    console.error(error);
-                    showAlert("❌ Errore di connessione", "danger");
-                }
-            });
+            } catch (error) {
+                console.error(error);
+                showAlert("❌ Errore di connessione", "danger");
+            }
         });
-    </script>
-</Layout>
+    }
+
+    // Handle Change Password Trigger
+    const changePasswordButtons = document.querySelectorAll(
+        ".change-password-btn",
+    );
+    changePasswordButtons.forEach((btn) => {
+        btn.addEventListener("click", () => {
+            const userId = btn.getAttribute("data-user-id")!;
+            const userName = btn.getAttribute("data-user-name")!;
+
+            (
+                document.getElementById(
+                    "changePasswordUserId",
+                ) as HTMLInputElement
+            ).value = userId;
+            document.getElementById("targetUserName")!.textContent = userName;
+
+            changePasswordModal.show();
+        });
+    });
+
+    // Handle Change Password Submit
+    const changePasswordForm = document.getElementById("change-password-form");
+    if (changePasswordForm) {
+        changePasswordForm.addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            const userId = (
+                document.getElementById(
+                    "changePasswordUserId",
+                ) as HTMLInputElement
+            ).value;
+            const newPassword = (
+                document.getElementById("newPassword") as HTMLInputElement
+            ).value;
+
+            try {
+                const res = await fetch("/api/admin/users", {
+                    method: "PATCH",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ userId, newPassword }),
+                });
+
+                if (res.ok) {
+                    showAlert(
+                        `✅ Password aggiornata con successo!`,
+                        "success",
+                    );
+                    changePasswordModal.hide();
+                    (changePasswordForm as HTMLFormElement).reset();
+                } else {
+                    const data = await res.json();
+                    showAlert(
+                        `❌ ${data.error || "Errore durante l'aggiornamento"}`,
+                        "danger",
+                    );
+                }
+            } catch (error) {
+                console.error(error);
+                showAlert("❌ Errore di connessione", "danger");
+            }
+        });
+    }
+
+    // Handle Delete User
+    const deleteButtons = document.querySelectorAll(".delete-user-btn");
+    deleteButtons.forEach((btn) => {
+        btn.addEventListener("click", async (e) => {
+            const userId = btn.getAttribute("data-user-id");
+            const userName = btn.getAttribute("data-user-name");
+
+            if (
+                !confirm(
+                    `Sei sicuro di voler eliminare l'utente ${userName}?\n\nQuesta azione è irreversibile.`,
+                )
+            ) {
+                return;
+            }
+
+            try {
+                const res = await fetch("/api/admin/users", {
+                    method: "DELETE",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ userId }),
+                });
+
+                if (res.ok) {
+                    showAlert(
+                        `✅ Utente <strong>${userName}</strong> eliminato`,
+                        "warning",
+                    );
+                    // Rimuovi la riga dalla tabella
+                    const row = document.querySelector(
+                        `tr[data-user-id="${userId}"]`,
+                    );
+                    if (row) {
+                        row.remove();
+                    }
+                } else {
+                    const data = await res.json();
+                    showAlert(
+                        `❌ ${data.error || "Errore durante l'eliminazione"}`,
+                        "danger",
+                    );
+                }
+            } catch (error) {
+                console.error(error);
+                showAlert("❌ Errore di connessione", "danger");
+            }
+        });
+    });
+</script>

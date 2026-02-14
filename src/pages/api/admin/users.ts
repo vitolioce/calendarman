@@ -99,3 +99,35 @@ export const DELETE: APIRoute = async ({ request, locals }) => {
         return new Response(JSON.stringify({ error: 'Internal Server Error' }), { status: 500 });
     }
 };
+
+// PATCH - Aggiorna password utente (solo admin)
+export const PATCH: APIRoute = async ({ request, locals }) => {
+    try {
+        const user = locals.user as User | undefined;
+
+        if (!user || !user.isAdmin) {
+            return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 403 });
+        }
+
+        const data = await request.json();
+        const { userId, newPassword } = data;
+
+        if (!userId || !newPassword) {
+            return new Response(JSON.stringify({ error: 'Missing required fields' }), { status: 400 });
+        }
+
+        if (newPassword.length < 6) {
+            return new Response(JSON.stringify({ error: 'Password too short' }), { status: 400 });
+        }
+
+        const passwordHash = await bcrypt.hash(newPassword, 10);
+
+        const { updateUser } = await import('../../../lib/db');
+        await updateUser(userId, { passwordHash });
+
+        return new Response(JSON.stringify({ message: 'Password updated successfully' }), { status: 200 });
+    } catch (error) {
+        console.error('Error updating password:', error);
+        return new Response(JSON.stringify({ error: 'Internal Server Error' }), { status: 500 });
+    }
+};

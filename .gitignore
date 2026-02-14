@@ -22,3 +22,10 @@ pnpm-debug.log*
 
 # jetbrains setting folder
 .idea/
+
+#dati online-locale
+data/events.json
+data/users.json
+
+
+data/users.json
