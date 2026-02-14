@@ -14,6 +14,7 @@ export interface Event {
   description: string;
   date: string; // ISO8601 (YYYY-MM-DD)
   time: string; // HH:mm
+  location?: string;
 }
 
 export interface Participant {

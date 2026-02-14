@@ -89,6 +89,14 @@ export async function deleteEvent(id: string): Promise<void> {
     await fs.writeFile(EVENTS_FILE, JSON.stringify(filteredEvents, null, 2), 'utf-8');
 }
 
+export async function updateEvent(id: string, updates: Partial<Event>): Promise<void> {
+    const events = await getEvents();
+    const index = events.findIndex(e => e.id === id);
+    if (index === -1) throw new Error('Event not found');
+    events[index] = { ...events[index], ...updates };
+    await fs.writeFile(EVENTS_FILE, JSON.stringify(events, null, 2), 'utf-8');
+}
+
 
 // Participant CRUD
 export async function getParticipants(): Promise<Participant[]> {

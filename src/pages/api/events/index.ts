@@ -35,7 +35,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
 
     try {
         const data = await request.json();
-        const { title, description, date, time } = data;
+        const { title, description, date, time, location } = data;
 
         if (!title || !date || !time) {
             return new Response(JSON.stringify({ error: 'Missing required fields' }), { status: 400 });
@@ -48,6 +48,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
             description: description || '',
             date,
             time,
+            location: location || '',
         };
 
         await saveEvent(event);

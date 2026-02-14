@@ -3,9 +3,10 @@
     "id": "ecdf058b-ae6f-4950-bb27-e993ea7f5c27",
     "creatorId": "b307c762-a07d-4d98-b0c9-39aa2c9887bc",
     "title": "Evento D&D Kazuma",
-    "description": "Serata di one shot, Master coinvolti: \nAlex, Vito, Giulio, Dario, Vanessa",
+    "description": "Pomeriggio di gioco al Kazuma di Ravenna\nMaster coinvolti: \nAlex, Vito, Giulio, Dario, Vanessa",
     "date": "2026-02-21",
-    "time": "21:00"
+    "time": "14:30",
+    "location": "Kazuma Ravenna"
   },
   {
     "id": "fd54562e-1070-4214-ba6b-e35fce95ad5b",
@@ -14,5 +15,13 @@
     "description": "Evento con 20-30 ragazzi gifted dai 9 ai 15 anni. Siamo in attesa di conferma del numero dei partecipanti e delle loro età Durante il pomeriggio ogni master preparerà 2 mini one shot della durata di circa 2 ore. 1° One shot dalle 14.30 alle 16.30 e la seconda dalle 17 alle 19.00. ",
     "date": "2026-03-07",
     "time": "17:00"
+  },
+  {
+    "id": "2e51f392-8999-437f-abec-1ff9cf2f8e26",
+    "creatorId": "b307c762-a07d-4d98-b0c9-39aa2c9887bc",
+    "title": "D&D alla biblio",
+    "description": "Tavolo di gioco alla biblioteca di Bagnacavallo",
+    "date": "2026-02-28",
+    "time": "14:30"
   }
 ]

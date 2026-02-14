@@ -104,12 +104,20 @@ const user = Astro.locals.user;
                                         data-id={event.id}
                                     >
                                         <div class="text-start">
-                                            <span class="fw-bold me-2 text-primary">
-                                                {event.time}
-                                            </span>
-                                            <span class="event-title">
-                                                {event.title}
-                                            </span>
+                                            <div class="d-flex align-items-center flex-wrap gap-2">
+                                                <span class="fw-bold text-primary">
+                                                    {event.time}
+                                                </span>
+                                                <span class="event-title fw-semibold">
+                                                    {event.title}
+                                                </span>
+                                            </div>
+                                            {event.location && (
+                                                <div class="small text-muted mt-1">
+                                                    <i class="bi bi-geo-alt me-1" />
+                                                    {event.location}
+                                                </div>
+                                            )}
                                         </div>
                                     </button>
                                 ))}
@@ -168,7 +176,112 @@ const user = Astro.locals.user;
                         data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <p id="upDetailDesc"></p>
+                    <p id="upDetailDesc" class="lead"></p>
+                    <p class="mb-3">
+                        <i class="bi bi-geo-alt-fill text-primary"></i>
+                        <span id="upDetailLocation" class="fw-bold"></span>
+                    </p>
+                    {
+                        user && (
+                            <div class="mt-4 pt-3 border-top d-flex gap-2">
+                                <button
+                                    id="upEditBtn"
+                                    class="btn btn-primary btn-sm d-none"
+                                >
+                                    <i class="bi bi-pencil-square" /> Modifica
+                                </button>
+                                <button
+                                    id="upDeleteBtn"
+                                    class="btn btn-danger btn-sm d-none"
+                                >
+                                    <i class="bi bi-trash" /> Elimina
+                                </button>
+                            </div>
+                        )
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Event Modal (Upcoming) -->
+    <div
+        class="modal fade"
+        id="upEditEventModal"
+        tabindex="-1"
+        aria-hidden="true"
+    >
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Modifica Evento</h5>
+                    <button
+                        type="button"
+                        class="btn-close"
+                        data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="up-edit-event-form">
+                        <div class="mb-3">
+                            <label for="upEditTitle" class="form-label"
+                                >Titolo</label
+                            >
+                            <input
+                                type="text"
+                                class="form-control"
+                                id="upEditTitle"
+                                required
+                            />
+                        </div>
+                        <div class="mb-3">
+                            <label for="upEditLocation" class="form-label"
+                                >Luogo</label
+                            >
+                            <input
+                                type="text"
+                                class="form-control"
+                                id="upEditLocation"
+                            />
+                        </div>
+                        <div class="mb-3">
+                            <label for="upEditDescInput" class="form-label"
+                                >Descrizione</label
+                            >
+                            <textarea
+                                class="form-control"
+                                id="upEditDescInput"
+                                rows="3"></textarea>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="upEditDate" class="form-label"
+                                    >Data</label
+                                >
+                                <input
+                                    type="date"
+                                    class="form-control"
+                                    id="upEditDate"
+                                    required
+                                />
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="upEditTime" class="form-label"
+                                    >Ora</label
+                                >
+                                <input
+                                    type="time"
+                                    class="form-control"
+                                    id="upEditTime"
+                                    required
+                                />
+                            </div>
+                        </div>
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary"
+                                >Aggiorna Evento</button
+                            >
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
@@ -196,7 +309,31 @@ const user = Astro.locals.user;
                     document.getElementById("upDetailTitle")!.textContent =
                         `${data.time} - ${data.title}`;
                     document.getElementById("upDetailDesc")!.textContent =
-                        data.description;
+                        data.description || "Nessuna descrizione.";
+                    document.getElementById("upDetailLocation")!.textContent =
+                        data.location || "Non specificato";
+                    // Logic for management buttons
+                    const deleteBtn = document.getElementById("upDeleteBtn");
+                    const editBtn = document.getElementById("upEditBtn");
+
+                    const meRes = await fetch("/api/auth/me");
+                    if (meRes.ok) {
+                        const me = await meRes.json();
+                        const canManage =
+                            me.id === data.creatorId || me.isAdmin;
+
+                        if (deleteBtn) {
+                            if (canManage) deleteBtn.classList.remove("d-none");
+                            else deleteBtn.classList.add("d-none");
+                        }
+                        if (editBtn) {
+                            if (canManage) editBtn.classList.remove("d-none");
+                            else editBtn.classList.add("d-none");
+                        }
+
+                        // Store full data for edit modal
+                        (t as any)._eventData = data;
+                    }
 
                     modal.show();
                 } catch (e) {
@@ -204,5 +341,108 @@ const user = Astro.locals.user;
                 }
             });
         });
+
+        // Handle Delete
+        document
+            .getElementById("upDeleteBtn")
+            ?.addEventListener("click", async () => {
+                if (
+                    !currentId ||
+                    !confirm("Sei sicuro di voler eliminare questo evento?")
+                )
+                    return;
+                try {
+                    const res = await fetch(`/api/events/${currentId}`, {
+                        method: "DELETE",
+                    });
+                    if (res.ok) window.location.reload();
+                    else alert("Errore eliminazione");
+                } catch (e) {
+                    console.error(e);
+                }
+            });
+
+        // Handle Edit Trigger
+        const upEditModalEl = document.getElementById("upEditEventModal");
+        const upEditModal = new Modal(upEditModalEl as HTMLElement);
+
+        document
+            .getElementById("upEditBtn")
+            ?.addEventListener("click", async () => {
+                if (!currentId) return;
+                const res = await fetch(`/api/events/${currentId}`);
+                if (!res.ok) return;
+                const data = await res.json();
+
+                (
+                    document.getElementById("upEditTitle") as HTMLInputElement
+                ).value = data.title;
+                (
+                    document.getElementById(
+                        "upEditDescInput",
+                    ) as HTMLTextAreaElement
+                ).value = data.description || "";
+                (
+                    document.getElementById("upEditDate") as HTMLInputElement
+                ).value = data.date;
+                (
+                    document.getElementById(
+                        "upEditLocation",
+                    ) as HTMLInputElement
+                ).value = data.location || "";
+                (
+                    document.getElementById("upEditTime") as HTMLInputElement
+                ).value = data.time;
+
+                modal.hide();
+                upEditModal.show();
+            });
+
+        // Handle Edit Submit
+        document
+            .getElementById("up-edit-event-form")
+            ?.addEventListener("submit", async (e) => {
+                e.preventDefault();
+                if (!currentId) return;
+
+                const title = (
+                    document.getElementById("upEditTitle") as HTMLInputElement
+                ).value;
+                const location = (
+                    document.getElementById(
+                        "upEditLocation",
+                    ) as HTMLInputElement
+                ).value;
+                const description = (
+                    document.getElementById(
+                        "upEditDescInput",
+                    ) as HTMLTextAreaElement
+                ).value;
+                const date = (
+                    document.getElementById("upEditDate") as HTMLInputElement
+                ).value;
+                const time = (
+                    document.getElementById("upEditTime") as HTMLInputElement
+                ).value;
+
+                try {
+                    const res = await fetch(`/api/events/${currentId}`, {
+                        method: "PATCH",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            title,
+                            description,
+                            location,
+                            date,
+                            time,
+                        }),
+                    });
+
+                    if (res.ok) window.location.reload();
+                    else alert("Errore aggiornamento");
+                } catch (e) {
+                    console.error(e);
+                }
+            });
     </script>
 </Layout>
