@@ -58,31 +58,33 @@ import Layout from "../layouts/Layout.astro";
 
     <script>
         const form = document.getElementById("login-form");
+
+        // Gestione Toggle Password (occhiolino)
+        const passwordInput = document.getElementById(
+            "password",
+        ) as HTMLInputElement;
+        const togglePassword = document.getElementById("togglePassword");
+        const toggleIcon = togglePassword?.querySelector("i");
+
+        if (togglePassword && passwordInput && toggleIcon) {
+            togglePassword.addEventListener("click", (e) => {
+                e.preventDefault(); // Evita strani comportamenti se dentro un form
+                const type =
+                    passwordInput.getAttribute("type") === "password"
+                        ? "text"
+                        : "password";
+                passwordInput.setAttribute("type", type);
+                toggleIcon.classList.toggle("bi-eye");
+                toggleIcon.classList.toggle("bi-eye-slash");
+            });
+        }
+
         if (form) {
             form.addEventListener("submit", async (e) => {
                 e.preventDefault();
                 const email = (
                     document.getElementById("email") as HTMLInputElement
                 ).value;
-                const passwordInput = document.getElementById(
-                    "password",
-                ) as HTMLInputElement;
-                const togglePassword =
-                    document.getElementById("togglePassword");
-                const toggleIcon = togglePassword?.querySelector("i");
-
-                if (togglePassword && passwordInput && toggleIcon) {
-                    togglePassword.addEventListener("click", () => {
-                        const type =
-                            passwordInput.getAttribute("type") === "password"
-                                ? "text"
-                                : "password";
-                        passwordInput.setAttribute("type", type);
-                        toggleIcon.classList.toggle("bi-eye");
-                        toggleIcon.classList.toggle("bi-eye-slash");
-                    });
-                }
-
                 const password = passwordInput.value;
 
                 try {

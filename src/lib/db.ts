@@ -38,32 +38,20 @@ export async function findUserById(id: string): Promise<User | undefined> {
 }
 
 export async function updateUser(id: string, updates: Partial<User>): Promise<void> {
-    if (Object.keys(updates).length === 0) return;
+    const current = await findUserById(id);
+    if (!current) throw new Error('User not found');
 
-    // Mapping TS keys to DB columns
-    const mapping: Record<string, string> = {
-        email: 'email',
-        passwordHash: 'password_hash',
-        nome: 'nome',
-        cognome: 'cognome',
-        isAdmin: 'is_admin'
-    };
+    const final = { ...current, ...updates };
 
-    const sets: string[] = [];
-    const values: any[] = [];
-
-    Object.entries(updates).forEach(([key, value]) => {
-        if (mapping[key]) {
-            sets.push(`${mapping[key]} = $${sets.length + 1}`);
-            values.push(value);
-        }
-    });
-
-    if (sets.length > 0) {
-        values.push(id);
-        const query = `UPDATE users SET ${sets.join(', ')} WHERE id = $${values.length}`;
-        await sql(query, values);
-    }
+    await sql`
+        UPDATE users 
+        SET email = ${final.email}, 
+            password_hash = ${final.passwordHash}, 
+            nome = ${final.nome}, 
+            cognome = ${final.cognome}, 
+            is_admin = ${final.isAdmin}
+        WHERE id = ${id}
+    `;
 }
 
 export async function deleteUser(id: string): Promise<void> {
@@ -99,32 +87,20 @@ export async function deleteEvent(id: string): Promise<void> {
 }
 
 export async function updateEvent(id: string, updates: Partial<Event>): Promise<void> {
-    if (Object.keys(updates).length === 0) return;
+    const current = await getEventById(id);
+    if (!current) throw new Error('Event not found');
 
-    const mapping: Record<string, string> = {
-        creatorId: 'creator_id',
-        title: 'title',
-        description: 'description',
-        location: 'location',
-        date: 'date',
-        time: 'time'
-    };
+    const final = { ...current, ...updates };
 
-    const sets: string[] = [];
-    const values: any[] = [];
-
-    Object.entries(updates).forEach(([key, value]) => {
-        if (mapping[key]) {
-            sets.push(`${mapping[key]} = $${sets.length + 1}`);
-            values.push(value);
-        }
-    });
-
-    if (sets.length > 0) {
-        values.push(id);
-        const query = `UPDATE events SET ${sets.join(', ')} WHERE id = $${values.length}`;
-        await sql(query, values);
-    }
+    await sql`
+        UPDATE events 
+        SET title = ${final.title}, 
+            description = ${final.description}, 
+            location = ${final.location}, 
+            date = ${final.date}, 
+            time = ${final.time}
+        WHERE id = ${id}
+    `;
 }
 
 
